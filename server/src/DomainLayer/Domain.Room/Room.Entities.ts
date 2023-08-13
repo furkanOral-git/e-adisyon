@@ -1,7 +1,7 @@
 import { Socket } from "socket.io"
-import { IDomainEntity } from "./Common.Abstracts"
-import { EventPipes, ParticipantId } from "./Common.ValueObjects"
-import { Room } from "./Common.AggregateRoot"
+import { IDomainEntity } from "../Common/Common.Abstracts"
+import { Room } from "./Room.AggregateRoot"
+import { ParticipantId, EventPipes } from "./Room.ValueObjects"
 
 export class Participant implements IDomainEntity<ParticipantId> {
 

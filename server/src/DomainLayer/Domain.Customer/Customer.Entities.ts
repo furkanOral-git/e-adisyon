@@ -9,7 +9,6 @@ export class AcountManager implements IDomainEntity<AcountManagerId> {
 
         this.__id = id;
     }
-    
-
-
 }
+
+

@@ -2,6 +2,17 @@ import { IDomainEntity } from "../Common/Common.Abstracts";
 import { Money } from "../Common/Common.ValueObjects";
 import { ProductCategory, ProductId, ProductStatus, TypeOfProduct } from "./Product.ValueObjects";
 
+export interface ProductAmountMap {
+
+    id: ProductId,
+    amount: number
+}
+export interface NewOrderedProductMap {
+    
+    orderedName: string
+    productType: TypeOfProduct
+    amount : number
+}
 export class Product implements IDomainEntity<ProductId> {
 
     public __id: ProductId
@@ -20,7 +31,7 @@ export class Product implements IDomainEntity<ProductId> {
         this.__status = status;
         this.__typeOfProduct = type;
     }
-    
-    
+
+
 
 }

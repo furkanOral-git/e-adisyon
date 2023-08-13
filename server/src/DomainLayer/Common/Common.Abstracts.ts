@@ -1,10 +1,7 @@
 import { Id } from "./Common.ValueObjects";
 
-export interface IAggregateRoot<TEntity> {
 
-
-}
-export interface IDomainEntity<TId extends Id<TId>> {
+export interface IDomainEntity<TId extends Id> {
 
     __id: TId;
 }

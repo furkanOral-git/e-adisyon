@@ -16,7 +16,7 @@ export class ProductCategory implements IValueObject {
         this.__categoryName = categoryName;
     }
 }
-export class ProductId extends Id<ProductId>{
+export class ProductId extends Id{
 
 }
 export enum ProductStatus {

@@ -1,0 +1,23 @@
+:root {}
+
+* {
+    box-sizing: border-box;
+    text-decoration: none;
+    list-style: none;
+    border: none;
+}
+
+*::selection {
+    outline: none;
+}
+
+html,
+body {
+
+    margin: 0px;
+    padding: 0px;
+    border: 0px;
+    font-family: 'Noto Sans', sans-serif;
+    font-weight: 400;
+
+}

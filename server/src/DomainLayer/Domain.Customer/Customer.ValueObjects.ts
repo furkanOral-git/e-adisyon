@@ -1,10 +1,9 @@
-import { IValueObject } from "../Common/Common.Abstracts";
 import { Id } from "../Common/Common.ValueObjects";
 
-export class BussinessId extends Id<BussinessId> {
+export class BussinessId extends Id {
 
 }
-export class AcountManagerId extends Id<AcountManagerId> {
+export class AcountManagerId extends Id {
 
 }
 

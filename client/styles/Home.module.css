@@ -1,0 +1,42 @@
+.container {
+    width: 100%;
+    height: 150vh;
+    display: flex;
+}
+
+.packages {
+    width: 90vw;
+    height: 30em;
+    margin-inline: auto;
+    display: flex;
+
+}
+
+.package {
+    width: 20em;
+    height: 100%;
+    background-color: #ddd;
+    margin-right: 15px;
+    border-radius: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    transition: 300ms transform;
+}
+.package:hover{
+    transform: scale(1.05);
+    cursor: pointer;
+}
+
+.packageBtn {
+    font-size: 14px;
+    font-weight: 300;
+    height: 10%;
+    border-radius: 0px 0px 40px 40px;
+
+}
+
+.packageBtn:hover {
+    cursor: pointer;
+   
+}

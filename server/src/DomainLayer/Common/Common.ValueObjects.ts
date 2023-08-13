@@ -1,4 +1,4 @@
-import { IEntityId, IGenericValueObject, IValueObject } from "./Common.Abstracts";
+import { IEntityId, IValueObject } from "./Common.Abstracts";
 
 export class Bill implements IValueObject {
 
@@ -10,43 +10,25 @@ export class Bill implements IValueObject {
 
     }
 }
-export abstract class Id<TId extends IValueObject> implements IValueObject, IGenericValueObject<TId>, IEntityId {
-    private __value: string
+export abstract class Id implements IEntityId {
 
+    private __value: string
+    public get value() {
+        return this.__value;
+    }
 
     constructor(value: string) {
         this.__value = value;
 
     }
-    IsEqualTo(right: TId): boolean {
-        throw new Error("Method not implemented.");
-    }
-    IsSameReference(right: TId): boolean {
-        throw new Error("Method not implemented.");
+
+    IsEqualTo<T extends Id>(id: T): boolean {
+        return id.__value == this.__value ? true : false
     }
 
 }
-export class RoomId extends Id<RoomId> implements IValueObject {
 
-}
-export class ParticipantId extends Id<ParticipantId> implements IValueObject {
-
-}
 export class Money implements IValueObject {
 
 }
-export enum EventPipes {
-    DataPipe = "DataPipe",
-    NotificationPipe = "NotificationPipe"
-}
-export enum DataEvents {
-    EmitTables = "emitTables"
-}
-export enum NotificationEvents {
 
-    Connected = "connected"
-}
-export enum ServerEvents {
-
-    Auth = "auth"
-}

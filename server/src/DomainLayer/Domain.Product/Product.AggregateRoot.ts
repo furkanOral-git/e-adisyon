@@ -8,9 +8,9 @@ export class Menu extends AggregateRoot<ProductId, Product> implements IDbEntity
 
     private __bussinessId: BussinessId
 
-    constructor(entities: Product[], bussinessId: BussinessId) {
+    constructor(bussinessId: BussinessId) {
 
-        super(entities)
+        super()
         this.__bussinessId = bussinessId;
     }
 
