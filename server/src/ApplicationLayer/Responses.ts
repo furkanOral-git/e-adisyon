@@ -1,9 +1,6 @@
-import { ReferenceKey } from "../DomainLayer/Domain.Customer/Customer.ValueObjects";
+import { BussinessId, ReferenceKey } from "../DomainLayer/Domain.Customer/Customer.ValueObjects";
 
-
-
-
-export class AuthenticationResponse{
+export abstract class AuthenticationResponse {
 
     __succeed: boolean
     __message: string
@@ -14,18 +11,29 @@ export class AuthenticationResponse{
         this.__succeed = succeed;
     }
 }
-export class ErrorAuthenticationResponse extends AuthenticationResponse {
+export class AppResponse {
 
-    constructor(message: string) {
-        super(false, message)
-    }
+
+}
+export class BuyResponse {
+
 }
 export class SucceedAuthenticationResponse extends AuthenticationResponse {
 
     private __key: ReferenceKey
+    private __bussinessId: BussinessId
+    
+    public get bussinessId() {
+        return this.__bussinessId;
+    }
+    public get key() {
+        return this.__key;
+    }
 
-    constructor(key: ReferenceKey, message: string) {
-        super(true, message)
+    constructor(key: ReferenceKey, bussinessId: BussinessId) {
+        super(true, "Başarılı")
+
         this.__key = key;
+        this.__bussinessId = bussinessId
     }
 }

@@ -11,7 +11,9 @@ export class Bussiness extends AggregateRoot<AcountManagerId, AcountManager> {
     private __name: string;
     private __roomId: string;
     private __referenceKey: ReferenceKey
-
+    public get key() {
+        return this.__referenceKey;
+    }
 
     constructor(id: BussinessId, roomId: string, name: string, referenceKey: ReferenceKey) {
 

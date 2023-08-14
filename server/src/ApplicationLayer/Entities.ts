@@ -21,3 +21,4 @@ export class BussinessConfigFile implements IDbEntity {
     }
 
 }
+

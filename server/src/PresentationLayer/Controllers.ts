@@ -3,13 +3,15 @@ import { AuthenticationService } from "../ApplicationLayer/Authentication";
 import { BuyRequest, LoginRequest, RegisterRequest } from "./Requests";
 
 import { AuthenticationResponse, SucceedAuthenticationResponse } from "../ApplicationLayer/Responses";
-import { BuyAppWorkFlowAsync } from "../ApplicationLayer/Workflows";
+import { BuyAppWorkFlowAsync, ConstructAppWorkFlow } from "../ApplicationLayer/Workflows";
 import { AuthenticationError, AuthenticationUnknownRequestType } from "../ApplicationLayer/Errors";
+import { Server } from "socket.io";
+import { IOServer } from "../DomainLayer/Domain.Room/Room.AggregateRoot";
 
 export const authenticationController = Router()
 export const appRequestController = Router()
 export const buyAppController = Router()
-
+//2
 export function AddAuthenticationController() {
 
     authenticationController.post("/", (req, res) => {
@@ -22,13 +24,13 @@ export function AddAuthenticationController() {
             const data = JSON.parse(requestData)
             let result: AuthenticationResponse | null;
 
-            if (data == typeof (RegisterRequest)) {
+            if (data instanceof RegisterRequest) {
 
-                result = AuthenticationService.Register(data as RegisterRequest)
+                result = AuthenticationService.Register(data)
             }
-            else if (data == typeof (LoginRequest)) {
+            else if (data instanceof LoginRequest) {
 
-                result = AuthenticationService.Verify(data as LoginRequest)
+                result = AuthenticationService.Verify(data)
             }
             else {
                 throw new AuthenticationUnknownRequestType("Bilinmeyen türde bir istek yapıldı!")
@@ -46,8 +48,9 @@ export function AddAuthenticationController() {
         })
     })
 }
-export function AddAppRequestController() {
-    //authenticate edildi mi kontrol edilecek ya da özel Url ile mi geliyor bu kontrol edilecek
+//3
+export function AddAppRequestController(server: IOServer) {
+
 
     appRequestController.post("/", (req, res) => {
 
@@ -55,14 +58,22 @@ export function AddAppRequestController() {
         req.on("data", (chunk: any) => {
             requestData += chunk.toString()
         })
-        req.on("end", () => {
 
-            console.log("çalıştı")
+        req.on("end", () => {
+            const request = JSON.parse(requestData)
+            if (request instanceof SucceedAuthenticationResponse) {
+                const response = ConstructAppWorkFlow(request, server);
+                //res.status(200).json(response);
+            }
+            else {
+                res.status(401).json("Not Authorized")
+            }
 
         })
     })
 
 }
+//1
 export function AddBuyAppController() {
 
 
@@ -75,13 +86,18 @@ export function AddBuyAppController() {
         req.on("end", async () => {
 
             const requestObject = JSON.parse(requestData)
-            const permission = await BuyAppWorkFlowAsync(requestObject as BuyRequest)
+            if (requestObject instanceof BuyRequest) {
+                await BuyAppWorkFlowAsync(requestObject)
+                    .then(() => {
 
-            if (!permission) {
-                res.status(400).json("Cevap Alınamadı !")
+                        res.status(200).json()
+
+                    }, (err) => {
+                        res.status(400).json(err.message)
+                    })
             }
             else {
-                res.status(200).json(permission)
+                res.status(400)
             }
 
         })

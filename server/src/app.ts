@@ -1,5 +1,3 @@
-import firebase from 'firebase/app';
-import 'firebase/database';
 import ServerManagement from "./server";
 import dotenv from 'dotenv'
 //firebase
@@ -27,7 +25,7 @@ const firebaseConfig = {
 // Initialize Firebase
 //const app = firebase.initializeApp(firebaseConfig)
 //const database = firebase.database(app)
-ServerManagement.buildIoServer(null)
+ServerManagement.buildIoServer()
 
 
 

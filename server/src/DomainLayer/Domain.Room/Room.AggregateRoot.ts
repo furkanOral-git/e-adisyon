@@ -1,39 +1,56 @@
-import { Server } from "socket.io"
+import { Server, Socket } from "socket.io"
 import { AggregateRoot } from "../Common/Common.AggregateRoot"
-import { ParticipantId, DataEvents, EventPipes, NotificationEvents } from "./Room.ValueObjects"
+import { EventType, ParticipantId, RoomId } from "./Room.ValueObjects"
 import { Participant } from "./Room.Entities"
+import { IDomainEntity } from "../Common/Common.Abstracts"
 
-export class Room extends AggregateRoot<ParticipantId, Participant> {
+export class Room extends AggregateRoot<ParticipantId, Participant> implements IDomainEntity<RoomId>{
 
-    private __roomId: string
+
+    __id: RoomId
     private __io: Server
 
-    public get id() {
-
-        return this.__roomId
-    }
-
-    constructor(io: Server, roomId: string) {
+    constructor(io: Server, roomId: RoomId) {
 
         super()
-        this.__roomId = roomId
+        this.__id = roomId
         this.__io = io
 
     }
-    emitDataToRoom(event: DataEvents, data: {}) {
+    SendDataToRoom(event: string, data: {}) {
 
-        this.__io.to(`${this.__roomId}-${EventPipes.DataPipe}`).emit(event, data)
+        this.__io.to(`${this.__id}.${EventType.Data}`).emit(event, data)
     }
-    emitNotificationToRoom(event: NotificationEvents, notification: string) {
+    SendNotificationToRoom(event: string, notification: string) {
 
-        this.__io.to(`${this.__roomId}-${EventPipes.NotificationPipe}`).emit(event, notification)
+        this.__io.to(`${this.__id}.${EventType.Notification}`).emit(event, notification)
     }
-    emitDataToParticipant(event: DataEvents, participantId: string, data: {}) {
+    SendDataToParticipant(event: string, participantId: string, data: {}) {
 
-        this.__io.emit(`${participantId}.DataEvent--${event}`, data)
+        this.__io.emit(`${participantId}.Data--${event}`, data)
     }
-    emitNotificationToParticipant(participantId: string, event: NotificationEvents, notification: string) {
+    SendNotificationToParticipant(participantId: string, event: string, notification: string) {
 
-        this.__io.emit(`${participantId}.NotificationEvent--${event}`, notification)
+        this.__io.emit(`${participantId}.Notification--${event}`, notification)
+    }
+}
+export class IOServer extends AggregateRoot<RoomId, Room>{
+
+    private __io: Server
+
+    constructor(io: Server) {
+        
+        super()
+        this.__io = io;
+        this.addConnectionEventHandlers()
+    }
+    private addConnectionEventHandlers() {
+
+        this.__io.on("connection", (socket: Socket) => {
+
+            //auth işlemleri yapıldıktan sonra socket oluşturulmalı
+            console.log(`Yeni Socket Bağlandı : ${socket.id}`)
+        })
+
     }
 }

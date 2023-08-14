@@ -1,7 +1,7 @@
 import { Socket } from "socket.io"
 import { IDomainEntity } from "../Common/Common.Abstracts"
 import { Room } from "./Room.AggregateRoot"
-import { ParticipantId, EventPipes } from "./Room.ValueObjects"
+import { EventType, ParticipantId } from "./Room.ValueObjects"
 
 export class Participant implements IDomainEntity<ParticipantId> {
 
@@ -18,8 +18,8 @@ export class Participant implements IDomainEntity<ParticipantId> {
 
     private JoinToRoom(room: Room) {
 
-        this.__socket?.join(`${room.id}-${EventPipes.NotificationPipe}`)
-        this.__socket?.join(`${room.id}-${EventPipes.DataPipe}`)
+        this.__socket?.join(`${room.__id}.${EventType.Notification}`)
+        this.__socket?.join(`${room.__id}.${EventType.Data}`)
         this.addDisconnectHandler(room)
         room.addTo(this)
     }
@@ -28,8 +28,8 @@ export class Participant implements IDomainEntity<ParticipantId> {
 
         this.__socket?.on("disconnect", () => {
 
-            this.__socket?.leave(`${room.id}-${EventPipes.NotificationPipe}`)
-            this.__socket?.leave(`${room.id}-${EventPipes.DataPipe}`)
+            this.__socket?.leave(`${room.__id}.${EventType.Notification}`)
+            this.__socket?.leave(`${room.__id}.${EventType.Data}`)
             this.__socket = null;
         })
     }

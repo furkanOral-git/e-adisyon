@@ -18,16 +18,12 @@ export class Order extends AggregateRoot<OrderItemId, OrderItem>{
     }
 
 }
-export class TableLayout extends AggregateRoot<TableId, Table> implements IDomainEntity<TableLayoutId>{
+export class TableLayout extends AggregateRoot<TableId, Table>{
 
-   
-    __id: TableLayoutId;
-
-
-    constructor(layoutId: TableLayoutId) {
+    constructor() {
 
         super()
-        this.__id = layoutId
+        
     }
 }
 

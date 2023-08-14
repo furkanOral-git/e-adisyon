@@ -4,19 +4,11 @@ import { BussinessId } from "../Domain.Customer/Customer.ValueObjects";
 import { Product } from "./Product.Entities";
 import { ProductId } from "./Product.ValueObjects";
 
-export class Menu extends AggregateRoot<ProductId, Product> implements IDbEntity {
+export class Menu extends AggregateRoot<ProductId, Product>{
 
-    private __bussinessId: BussinessId
-
-    constructor(bussinessId: BussinessId) {
+    constructor() {
 
         super()
-        this.__bussinessId = bussinessId;
+        
     }
-
-    getBussinessId(): BussinessId {
-        return this.__bussinessId
-    }
-
-
 }

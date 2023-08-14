@@ -4,6 +4,7 @@ import { useRouter } from "next/router"
 
 function Home() {
     const router = useRouter()
+    
     const handleClick = (type: number) => {
 
         let data: string = ""

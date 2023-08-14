@@ -1,5 +1,5 @@
 import { useRouter } from "next/router"
-import { BuyRequest, sendBuyAppRequest } from "../../services/Requests"
+
 
 function Auth() {
     

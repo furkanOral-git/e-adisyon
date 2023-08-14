@@ -40,9 +40,7 @@ export class BuyRequest {
 
 
 }
-export class AppRequest {
 
-}
 export enum PackageTypes {
     Trial,
     ThreeMonthly,
@@ -50,38 +48,4 @@ export enum PackageTypes {
     Yearly
 }
 
-export async function sendBuyAppRequest(month: number, customerName: string, customerSurname: string, bussinessName: string): Promise<boolean> {
 
-    return new Promise<boolean>(async (resolve, reject) => {
-        let request;
-
-        switch (month <= 12) {
-            case month == 0:
-                request = new BuyRequest(PackageTypes.Trial, customerName, customerSurname, bussinessName)
-                break;
-            case month == 3:
-                request = new BuyRequest(PackageTypes.ThreeMonthly, customerName, customerSurname, bussinessName)
-                break;
-            case month == 5:
-                request = new BuyRequest(PackageTypes.FiveMonthly, customerName, customerSurname, bussinessName)
-                break;
-            case month == 12:
-                request = new BuyRequest(PackageTypes.Yearly, customerName, customerSurname, bussinessName)
-                break;
-            default:
-                reject("Hizmet Dışı Talep")
-        }
-
-        const response = await fetch("http://localhost:5000/buy", {
-
-            method: "POST",
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(request)
-        })
-        resolve(await response.json())
-    })
-
-
-}

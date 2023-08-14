@@ -1,26 +1,21 @@
 import { Socket, io } from "socket.io-client"
+import { IoClientModel } from "./Models";
 
 
 export class IoClient {
 
     private socket: Socket;
-    private __roomId: string;
-    private __participantId : string;
-    private __name : string;
-    private __surname : string;
+    private __model: IoClientModel
 
     public listeners: { [event: string]: (data: any) => void };
 
-    private constructor(domain: string, port: number, roomId: string, participantId: string, name: string, surname: string) {
+    private constructor(domain: string, port: number, model: IoClientModel) {
 
         this.listeners = {}
         this.socket = io(`http://${domain}:${port}`)
-        this.__name = name;
-        this.__surname = surname;
-        this.__participantId = participantId;
-        this.__roomId = roomId;
+        this.__model = model;
     }
-
+    
     sendNotification(event: string, mesaj: string) {
 
         this.socket.emit(event, mesaj)
