@@ -10,6 +10,9 @@ export class Bussiness extends AggregateRoot<AcountManagerId, AcountManager> {
     }
     private __name: string;
     private __roomId: string;
+    public get roomId() {
+        return this.__roomId;
+    }
     private __referenceKey: ReferenceKey
     public get key() {
         return this.__referenceKey;

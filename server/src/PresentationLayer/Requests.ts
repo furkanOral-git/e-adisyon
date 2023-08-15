@@ -1,32 +1,56 @@
+import { BuyResponse } from "../ApplicationLayer/Responses";
+
 export class LoginRequest {
 
-    private __bussinessName: string;
-    private __name: string;
-    private __surname: string;
-    private __securityQuestionAnswer: string;
+
+    private __email: string;
     private __password: string;
 
-    constructor(bussinessName: string, name: string, surname: string, answer: string, password: string) {
 
-        this.__bussinessName = bussinessName;
-        this.__name = name;
-        this.__surname = surname;
-        this.__securityQuestionAnswer = answer;
+    public get email() {
+        return this.__email;
+    }
+    public get password() {
+        return this.__password;
+    }
+
+    constructor(email: string, password: string) {
+
+        this.__email = email;
         this.__password = password;
     }
 }
 export class RegisterRequest {
 
-    private __securityQuestion: string;
-    private __securityQuestionAnswer: string; //client tarafında tekrarlanacak 2 defa alınacak eşleştirilecek
-    private __password: string;//client tarafında tekrarlanacak 2 defa alınacak eşleştirilecek
-    private __request: BuyRequest
-    
-    constructor(request: BuyRequest, question: string, questionAnswer: string, password: string) {
+    private __email: string;
+    private __name: string;
+    private __surname: string;
+    private __password: string;
+    private __response: BuyResponse
 
-        this.__request = request;
-        this.__securityQuestion = question;
-        this.__securityQuestionAnswer = questionAnswer;
+    public get email() {
+        return this.__email;
+    }
+    public get name() {
+        return this.__name;
+    }
+    public get surname() {
+        return this.__surname;
+    }
+    public get response() {
+        return this.__response
+    }
+    public get password() {
+        return this.__password;
+    }
+
+
+    constructor(response: BuyResponse, email: string, name: string, surname: string, password: string) {
+
+        this.__email = email;
+        this.__response = response;
+        this.__name = name;
+        this.__surname = surname;
         this.__password = password;
     }
 

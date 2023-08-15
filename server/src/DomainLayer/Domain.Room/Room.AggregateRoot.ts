@@ -37,9 +37,11 @@ export class Room extends AggregateRoot<ParticipantId, Participant> implements I
 export class IOServer extends AggregateRoot<RoomId, Room>{
 
     private __io: Server
-
+    public get io() {
+        return this.__io;
+    }
     constructor(io: Server) {
-        
+
         super()
         this.__io = io;
         this.addConnectionEventHandlers()

@@ -2,7 +2,7 @@ import { Router } from "express";
 import { AuthenticationService } from "../ApplicationLayer/Authentication";
 import { BuyRequest, LoginRequest, RegisterRequest } from "./Requests";
 
-import { AuthenticationResponse, SucceedAuthenticationResponse } from "../ApplicationLayer/Responses";
+import { AuthenticationResponse, FailedAuthenticationResponse, SucceedAuthenticationResponse } from "../ApplicationLayer/Responses";
 import { BuyAppWorkFlowAsync, ConstructAppWorkFlow } from "../ApplicationLayer/Workflows";
 import { AuthenticationError, AuthenticationUnknownRequestType } from "../ApplicationLayer/Errors";
 import { Server } from "socket.io";
@@ -22,7 +22,7 @@ export function AddAuthenticationController() {
         })
         req.on("end", () => {
             const data = JSON.parse(requestData)
-            let result: AuthenticationResponse | null;
+            let result: AuthenticationResponse;
 
             if (data instanceof RegisterRequest) {
 
@@ -33,17 +33,16 @@ export function AddAuthenticationController() {
                 result = AuthenticationService.Verify(data)
             }
             else {
-                throw new AuthenticationUnknownRequestType("Bilinmeyen türde bir istek yapıldı!")
+                result = new FailedAuthenticationResponse("Bilinmeyen istek yapısı")
+                res.status(400).json(result)
             }
-            if (!!result) {
 
-                if (!result.__succeed) {
+            if (!result.__succeed) {
 
-                    throw new AuthenticationError(result.__message)
-                }
-                const succeedResult = result as SucceedAuthenticationResponse
-                res.status(200).json(succeedResult)
+                res.status(400).json(new AuthenticationError())
             }
+            const succeedResult = result as SucceedAuthenticationResponse
+            res.status(200).json(succeedResult)
 
         })
     })
@@ -63,7 +62,7 @@ export function AddAppRequestController(server: IOServer) {
             const request = JSON.parse(requestData)
             if (request instanceof SucceedAuthenticationResponse) {
                 const response = ConstructAppWorkFlow(request, server);
-                //res.status(200).json(response);
+                res.status(200).json(response);
             }
             else {
                 res.status(401).json("Not Authorized")
@@ -87,14 +86,10 @@ export function AddBuyAppController() {
 
             const requestObject = JSON.parse(requestData)
             if (requestObject instanceof BuyRequest) {
-                await BuyAppWorkFlowAsync(requestObject)
-                    .then(() => {
-
-                        res.status(200).json()
-
-                    }, (err) => {
-                        res.status(400).json(err.message)
-                    })
+                const response = await BuyAppWorkFlowAsync(requestObject).catch((err) => {
+                    res.status(400).json(err)
+                })
+                res.status(200).json(response)
             }
             else {
                 res.status(400)

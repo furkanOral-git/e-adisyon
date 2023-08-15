@@ -16,6 +16,9 @@ export abstract class AggregateRoot<TId extends Id, TEntity extends IDomainEntit
             this.__entities.push(entity);
         }
     }
+    some(predicate: (e: TEntity) => boolean): boolean {
+        return this.__entities.some(predicate)
+    }
     getAllBy(predicate: (entity: TEntity) => boolean): TEntity[] {
 
         return this.__entities.filter(predicate);
@@ -38,7 +41,7 @@ export abstract class AggregateRoot<TId extends Id, TEntity extends IDomainEntit
 
         this.__entities = newEntities;
     }
-    updateProductByIndex(index: number, newEntity: TEntity) {
+    updateEntityByIndex(index: number, newEntity: TEntity) {
 
         this.__entities[index] = newEntity
     }

@@ -1,69 +1,64 @@
 import { Bussiness } from "../DomainLayer/Domain.Customer/Customer.AggregateRoot";
 import { AcountManagerId, BussinessId, ReferenceKey } from "../DomainLayer/Domain.Customer/Customer.ValueObjects";
 import { TableLayout } from "../DomainLayer/Domain.Order/Order.AggregateRoot";
-import { IOServer } from "../DomainLayer/Domain.Room/Room.AggregateRoot";
-import { BuyRequest, PackageTypes } from "../PresentationLayer/Requests";
+import { IOServer, Room } from "../DomainLayer/Domain.Room/Room.AggregateRoot";
+import { BuyRequest } from "../PresentationLayer/Requests";
 import { BussinessConfigFile } from "./Entities";
 import { ConfigRepository } from "./Repositories";
-import { AppResponse, SucceedAuthenticationResponse } from "./Responses";
+import { BuyResponse, SucceedAuthenticationResponse } from "./Responses";
 import { RondomIdGenarator } from "./Tools";
 import { AcountManager } from "../DomainLayer/Domain.Customer/Customer.Entities";
 import { Menu } from "../DomainLayer/Domain.Product/Product.AggregateRoot";
+import { RoomId } from "../DomainLayer/Domain.Room/Room.ValueObjects";
 
 
-export async function BuyAppWorkFlowAsync(request: BuyRequest): Promise<void> {
 
-    return new Promise<void>((resolve, reject) => {
+export async function BuyAppWorkFlowAsync(request: BuyRequest, ioServerAggregate: IOServer): Promise<BuyResponse> {
+    
 
+    return new Promise<BuyResponse>((resolve, reject) => {
+        
+        const requestId = RondomIdGenarator.CreateId(7)
+        ioServerAggregate.addWaitedBuyRequest(request, requestId);
+
+        ioServerAggregate.listen(`buy-${requestId}`, (res) => {
+            if (res) {
+                const repo = ConfigRepository.GetRepo();
+                const key = ReferenceKey.Create(request.packageType, request.amount)
+                const roomId = RondomIdGenarator.CreateId(30)
+                const bussiness = new Bussiness
+                    (
+                        new BussinessId(RondomIdGenarator.CreateId(15))
+                        , roomId
+                        , request.bussinessName
+                        , key);
+
+                const acountManagerId = new AcountManagerId(RondomIdGenarator.CreateId(15))
+                const acountManager = new AcountManager(acountManagerId, request.customerName, request.customerSurname)
+                bussiness.addTo(acountManager);
+                const config = new BussinessConfigFile(bussiness, new TableLayout(), new Menu())
+                repo.add(config)
+                resolve(new BuyResponse(acountManagerId, bussiness.id, roomId))
+            }
+            else {
+                reject()
+            }
+        })
         //burada bir socket alanının dinlendiğini varsayalım cevap beklediği düşünelim. kabul edildiğinde şunlar çalışacak
         //////// 
-        const repo = ConfigRepository.GetRepo();
-        const key = ReferenceKey.Create(request.packageType, request.amount)
 
-        const bussiness = new Bussiness
-            (
-                new BussinessId(RondomIdGenarator.CreateId(15))
-                , RondomIdGenarator.CreateId(30)
-                , request.bussinessName
-                , key);
-
-        const acountManager = new AcountManager(new AcountManagerId(RondomIdGenarator.CreateId(15)), request.customerName, request.customerSurname)
-        bussiness.addTo(acountManager);
-        const config = new BussinessConfigFile(bussiness, new TableLayout(), new Menu())
-        repo.add(config)
-        resolve()
     })
 
 }
-//register
-export function ConstructAppWorkFlow(registerResponse: SucceedAuthenticationResponse, ioServerAggregate: IOServer): string  {
 
-    const repo = ConfigRepository.GetRepo();
-    const bussinessConfig = repo.getBy(c => c.bussiness.id.IsEqualTo<BussinessId>(registerResponse.bussinessId))
-    //tableLayout ve Menu itemlerı döndürülecek,room oluşturulacak ve Server'a eklenecek
-    //const room = new Room();
-    return ""
+export function ConstructAppWorkFlow(response: SucceedAuthenticationResponse, ioServerAggregate: IOServer) {
+
+    const room = new Room(ioServerAggregate.io, new RoomId(response.roomId))
+    ioServerAggregate.addTo(room);
+
 }
 
 
-// export function GetTablesWorkFlow(bussinessId: BussinessId, size: number, initialTableNumber: number): TableLayout {
 
-//     const repo = ConfigRepository.GetRepo();
-//     const result = repo.getBy(e => e.bussiness.id.IsEqualTo<BussinessId>(bussinessId))
-//     if (!!result.__tableLayout) {
-//         return result.__tableLayout;
-//     }
-
-//     const layout = new TableLayout()
-//     for (let index: number = initialTableNumber; index <= initialTableNumber + size; index++) {
-
-//         const id = new TableId(RondomIdGenarator.CreateId(7))
-//         const table = new EmptyTable(id, new TableNumber(index))
-//         layout.addTo(table)
-
-//     }
-//     result.__tableLayout = layout;
-//     return layout
-// }
 
 

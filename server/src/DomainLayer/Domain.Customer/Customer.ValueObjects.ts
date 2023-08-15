@@ -7,7 +7,7 @@ export class BussinessId extends Id {
 export class AcountManagerId extends Id {
 
 }
-export class NullReferenceKey{
+export class NullReferenceKey {
 
 }
 export class ReferenceKey {
@@ -41,6 +41,10 @@ export class ReferenceKey {
             default:
                 throw new Error("Bir Hata Oluştu")
         }
+    }
+    public isExpired(): boolean {
+        const currentDate = new Date();
+        return this.ExpireyDate < currentDate
     }
     private static createForDay(day: number): ReferenceKey {
 

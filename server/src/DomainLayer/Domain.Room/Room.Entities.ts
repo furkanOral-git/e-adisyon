@@ -6,6 +6,7 @@ import { EventType, ParticipantId } from "./Room.ValueObjects"
 export class Participant implements IDomainEntity<ParticipantId> {
 
     __id: ParticipantId
+    
     public __socket: Socket | null
 
 
