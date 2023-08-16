@@ -1,8 +1,13 @@
 import { BuyResponse, SucceedAuthenticationResponse } from "../ApplicationLayer/Responses";
+
+
 export abstract class BaseRequest {
+
+   
 
 }
 export class GetAppRequest extends BaseRequest {
+    
 
     private __roomId: string
 
@@ -16,7 +21,7 @@ export class GetAppRequest extends BaseRequest {
     }
 }
 export class LoginRequest extends BaseRequest {
-
+    
 
     private __email: string;
     private __password: string;
@@ -37,7 +42,7 @@ export class LoginRequest extends BaseRequest {
     }
 }
 export class RegisterRequest extends BaseRequest {
-
+    
     private __email: string;
     private __name: string;
     private __surname: string;

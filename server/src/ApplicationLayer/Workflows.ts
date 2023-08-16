@@ -2,14 +2,15 @@ import { Bussiness } from "../DomainLayer/Domain.Customer/Customer.AggregateRoot
 import { AcountManagerId, BussinessId, ReferenceKey } from "../DomainLayer/Domain.Customer/Customer.ValueObjects";
 import { TableLayout } from "../DomainLayer/Domain.Order/Order.AggregateRoot";
 import { IOServer, Room } from "../DomainLayer/Domain.Room/Room.AggregateRoot";
-import { BuyRequest, GetAppRequest } from "../PresentationLayer/Requests";
+import { BuyRequest, GetAppRequest, LoginRequest, RegisterRequest } from "../PresentationLayer/Requests";
 import { BussinessConfigFile } from "./Entities";
 import { ConfigRepository } from "./Repositories";
-import { BuyResponse, SucceedAuthenticationResponse } from "./Responses";
+import { AuthenticationResponse, BuyResponse, FailedAuthenticationResponse, SucceedAuthenticationResponse } from "./Responses";
 import { RondomIdGenarator } from "./Tools";
 import { AcountManager } from "../DomainLayer/Domain.Customer/Customer.Entities";
 import { Menu } from "../DomainLayer/Domain.Product/Product.AggregateRoot";
 import { RoomId } from "../DomainLayer/Domain.Room/Room.ValueObjects";
+import { AuthenticationService } from "./Authentication";
 
 
 
@@ -46,17 +47,47 @@ export async function BuyAppWorkFlowAsync(request: BuyRequest, ioServerAggregate
 
         })
         ioServerAggregate.stopListen("buy")
-        //burada bir socket alanının dinlendiğini varsayalım cevap beklediği düşünelim. kabul edildiğinde şunlar çalışacak
-        //////// 
+
 
     })
 
 }
+export async function RegisterRequestWorkflowAsync(request: RegisterRequest): Promise<AuthenticationResponse> {
 
-export async function ConstructAppWorkFlow(response: GetAppRequest, ioServerAggregate: IOServer) {
+    return new Promise<AuthenticationResponse>((resolve, reject) => {
+        const response = AuthenticationService.Register(request);
+        if (response.__succeed) {
 
-    const room = new Room(ioServerAggregate.io, new RoomId(response.roomId))
+            resolve(response as SucceedAuthenticationResponse)
+        }
+        else {
+
+            reject(response as FailedAuthenticationResponse)
+        }
+    })
+}
+export async function LoginRequestWorkflowAsync(request: LoginRequest): Promise<AuthenticationResponse> {
+
+    return new Promise<AuthenticationResponse>((resolve, reject) => {
+
+        const response = AuthenticationService.Verify(request);
+        console.log(`Verify Methodu içerisinde : ${response} objesi`)
+        if (response.__succeed) {
+
+            resolve(response as SucceedAuthenticationResponse)
+        }
+        else {
+
+            reject(response as FailedAuthenticationResponse)
+        }
+    })
+
+}
+export async function ConstructAppWorkFlow(request: GetAppRequest, ioServerAggregate: IOServer) {
+
+    const room = new Room(ioServerAggregate.io, new RoomId(request.roomId))
     ioServerAggregate.addTo(room);
+    
 
 }
 
