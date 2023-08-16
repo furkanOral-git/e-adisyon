@@ -1,11 +1,9 @@
 import { Router } from "express";
 import { AuthenticationService } from "../ApplicationLayer/Authentication";
-import { BuyRequest, LoginRequest, RegisterRequest } from "./Requests";
-
+import { BaseRequest, BuyRequest, GetAppRequest, LoginRequest, RegisterRequest } from "./Requests";
 import { AuthenticationResponse, FailedAuthenticationResponse, SucceedAuthenticationResponse } from "../ApplicationLayer/Responses";
 import { BuyAppWorkFlowAsync, ConstructAppWorkFlow } from "../ApplicationLayer/Workflows";
-import { AuthenticationError, AuthenticationUnknownRequestType } from "../ApplicationLayer/Errors";
-import { Server } from "socket.io";
+import { AuthenticationError } from "../ApplicationLayer/Errors";
 import { IOServer } from "../DomainLayer/Domain.Room/Room.AggregateRoot";
 
 export const authenticationController = Router()
@@ -53,53 +51,49 @@ export function AddAppRequestController(server: IOServer) {
 
     appRequestController.post("/", (req, res) => {
 
-        let requestData = ""
-        req.on("data", (chunk: any) => {
-            requestData += chunk.toString()
-        })
-
-        req.on("end", () => {
-            const request = JSON.parse(requestData)
-            if (request instanceof SucceedAuthenticationResponse) {
-                const response = ConstructAppWorkFlow(request, server);
-                res.status(200).json(response);
-            }
-            else {
-                res.status(401).json("Not Authorized")
-            }
-
-        })
+        processRequest<GetAppRequest>(ConstructAppWorkFlow, req, res, server, "SucceedAuthenticationResponse")
     })
 
 }
 //1
-export function AddBuyAppController() {
+
+export function AddBuyAppController(server: IOServer) {
 
 
     buyAppController.post("/", (req, res) => {
 
-        let requestData = ""
-        req.on("data", (chunk: any) => {
-            requestData += chunk.toString()
-        })
-        req.on("end", async () => {
-
-            const requestObject = JSON.parse(requestData)
-            if (requestObject instanceof BuyRequest) {
-                const response = await BuyAppWorkFlowAsync(requestObject).catch((err) => {
-                    res.status(400).json(err)
-                })
-                res.status(200).json(response)
-            }
-            else {
-                res.status(400)
-            }
-
-        })
+        processRequest<BuyRequest>(BuyAppWorkFlowAsync, req, res, server, "BuyRequest")
     })
 }
+async function processRequest<TRequest extends BaseRequest>(
+    workflowFunction: (request: TRequest, server: IOServer) => Promise<any>,
+    req: any,
+    res: any,
+    server: IOServer,
+    expectedTypeName: string
+) {
+    let requestData = ""
+    req.on("data", (chunk: any) => {
+        requestData += chunk.toString()
+    })
+    req.on("end", async () => {
 
+        const requestObject = JSON.parse(requestData);
 
+        if (requestObject.type === expectedTypeName) {
+
+            const response = await workflowFunction(requestObject as TRequest, server).catch((err) => {
+                res.status(400).json(err);
+            });
+
+            res.status(200).json(response);
+        } else {
+            res.status(400).json("Unvalid JSON object Type");
+            console.log("Geçersiz JSON nesnesi");
+        }
+    })
+
+}
 
 
 

@@ -1,6 +1,6 @@
 import cors from "cors";
 import express from "express";
-import { Server} from "socket.io";
+import { Server } from "socket.io";
 import { createServer } from "http"
 import { exceptionMiddleware } from "./middleware";
 import { AddAppRequestController, AddAuthenticationController, AddBuyAppController, appRequestController, authenticationController, buyAppController } from "./PresentationLayer/Controllers";
@@ -17,22 +17,26 @@ export default class ServerManagement {
 
         const app = express()
         const httpServer = createServer(app);
-        app.use(cors())
         app.use(exceptionMiddleware)
         app.use("/auth", authenticationController)
         app.use("/buy", buyAppController)
         app.use("/app", appRequestController)
-        ServerManagement.__ = new IOServer(new Server(httpServer));
+        ServerManagement.__ = new IOServer(new Server(httpServer, {
+            cors: {
+                origin: "*",
+                methods: ["POST", "GET"]
+            }
+        }));
         this.AddControllers()
-        httpServer.listen(5000, "localhost");
+        httpServer.listen(3001, "localhost");
     }
 
-    
+
     private static AddControllers() {
 
-        AddBuyAppController();
+        AddBuyAppController(this.__);
         AddAuthenticationController();
-        AddAppRequestController();
+        AddAppRequestController(this.__);
     }
 
 

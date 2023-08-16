@@ -1,6 +1,21 @@
-import { BuyResponse } from "../ApplicationLayer/Responses";
+import { BuyResponse, SucceedAuthenticationResponse } from "../ApplicationLayer/Responses";
+export abstract class BaseRequest {
 
-export class LoginRequest {
+}
+export class GetAppRequest extends BaseRequest {
+
+    private __roomId: string
+
+    public get roomId() {
+
+        return this.__roomId
+    }
+    constructor(res: SucceedAuthenticationResponse) {
+        super()
+        this.__roomId = res.roomId;
+    }
+}
+export class LoginRequest extends BaseRequest {
 
 
     private __email: string;
@@ -16,11 +31,12 @@ export class LoginRequest {
 
     constructor(email: string, password: string) {
 
+        super()
         this.__email = email;
         this.__password = password;
     }
 }
-export class RegisterRequest {
+export class RegisterRequest extends BaseRequest {
 
     private __email: string;
     private __name: string;
@@ -46,7 +62,7 @@ export class RegisterRequest {
 
 
     constructor(response: BuyResponse, email: string, name: string, surname: string, password: string) {
-
+        super()
         this.__email = email;
         this.__response = response;
         this.__name = name;
@@ -55,9 +71,9 @@ export class RegisterRequest {
     }
 
 }
-export class BuyRequest {
+export class BuyRequest extends BaseRequest {
 
-    private __id: number
+
     private __packageType: PackageTypes
     public get packageType() {
         return this.__packageType;
@@ -79,9 +95,8 @@ export class BuyRequest {
         return this.__bussinessName;
     }
 
-    constructor(id: number, packageType: PackageTypes, amount: number, customerName: string, customerSurname: string, bussinessName: string) {
-
-        this.__id = id
+    constructor(packageType: PackageTypes, amount: number, customerName: string, customerSurname: string, bussinessName: string) {
+        super()
         this.__amount = amount;
         this.__packageType = packageType;
         this.__customerName = customerName;
@@ -92,7 +107,7 @@ export class BuyRequest {
 }
 
 export enum PackageTypes {
-    Trial,
-    Monthly,
-    Yearly
+    Trial = "TRIAL",
+    Monthly = "MONTHLY",
+    Yearly = "YEARLY"
 }

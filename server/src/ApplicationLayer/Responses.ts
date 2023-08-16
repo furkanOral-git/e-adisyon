@@ -50,7 +50,9 @@ export abstract class AuthenticationResponse {
 }
 
 export class SucceedAuthenticationResponse extends AuthenticationResponse {
+    
     private __roomId: string
+    
     public get roomId() {
         return this.__roomId
     }

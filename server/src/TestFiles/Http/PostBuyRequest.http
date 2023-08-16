@@ -1,0 +1,10 @@
+POST http://localhost:3001/buy
+Content-Type: application/json
+
+{
+    "packageType" : "TRIAL",
+    "amount" : 15,
+    "customerName" : "Furkan",
+    "customerSurname" : "Oral",
+    "bussinessName" : "Yazılım Şirketi"
+}
