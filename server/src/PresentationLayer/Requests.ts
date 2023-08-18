@@ -1,13 +1,13 @@
-import { BuyResponse, SucceedAuthenticationResponse } from "../ApplicationLayer/Responses";
+import {  AcceptedAccessPermissionResponse, SucceedAuthenticationResponse } from "../ApplicationLayer/Responses";
 
 
 export abstract class BaseRequest {
 
-   
+
 
 }
 export class GetAppRequest extends BaseRequest {
-    
+
 
     private __roomId: string
 
@@ -21,7 +21,7 @@ export class GetAppRequest extends BaseRequest {
     }
 }
 export class LoginRequest extends BaseRequest {
-    
+
 
     private __email: string;
     private __password: string;
@@ -42,12 +42,12 @@ export class LoginRequest extends BaseRequest {
     }
 }
 export class RegisterRequest extends BaseRequest {
-    
+
     private __email: string;
     private __name: string;
     private __surname: string;
     private __password: string;
-    private __response: BuyResponse
+    private __response: AcceptedAccessPermissionResponse
 
     public get email() {
         return this.__email;
@@ -66,7 +66,7 @@ export class RegisterRequest extends BaseRequest {
     }
 
 
-    constructor(response: BuyResponse, email: string, name: string, surname: string, password: string) {
+    constructor(response: AcceptedAccessPermissionResponse, email: string, name: string, surname: string, password: string) {
         super()
         this.__email = email;
         this.__response = response;
@@ -76,7 +76,7 @@ export class RegisterRequest extends BaseRequest {
     }
 
 }
-export class BuyRequest extends BaseRequest {
+export class AccessPermissionRequest extends BaseRequest {
 
 
     private __packageType: PackageTypes
@@ -99,14 +99,19 @@ export class BuyRequest extends BaseRequest {
     public get bussinessName() {
         return this.__bussinessName;
     }
+    private __email: string;
+    public get email() {
+        return this.__email;
+    }
 
-    constructor(packageType: PackageTypes, amount: number, customerName: string, customerSurname: string, bussinessName: string) {
+    constructor(packageType: PackageTypes, amount: number, customerName: string, customerSurname: string, bussinessName: string, email: string) {
         super()
         this.__amount = amount;
         this.__packageType = packageType;
         this.__customerName = customerName;
         this.__customerSurname = customerSurname;
         this.__bussinessName = bussinessName;
+        this.__email = email;
     }
 
 }

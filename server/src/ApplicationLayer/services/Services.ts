@@ -1,6 +1,5 @@
-import { IDomainEntity } from "../DomainLayer/Common/Common.Abstracts";
-import { Id } from "../DomainLayer/Common/Common.ValueObjects";
-
+import { IDomainEntity } from "../../DomainLayer/Common/Common.Abstracts"
+import { Id } from "../../DomainLayer/Common/Common.ValueObjects"
 
 
 
@@ -17,6 +16,8 @@ export interface IBasicService<TId extends Id, TEntity extends IDomainEntity<TId
 
     GetBy(predicate: (entity: TEntity) => boolean): TEntity | null
 }
+
+
 
 
 

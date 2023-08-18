@@ -5,8 +5,6 @@ import { exceptionMiddleware } from "./middleware";
 import { AddAppRequestController, AddBuyAppController, AddLoginRequestController, AddRegisterRequestController, appRequestController, buyAppController, loginRequestController, registerRequestController } from "./PresentationLayer/Controllers";
 import { IOServer } from "./DomainLayer/Domain.Room/Room.AggregateRoot";
 
-
-
 export default class ServerManagement {
 
     private static __: IOServer

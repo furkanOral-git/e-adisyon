@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { BaseRequest, BuyRequest, GetAppRequest, LoginRequest, RegisterRequest } from "./Requests";
-import { BuyAppWorkFlowAsync, ConstructAppWorkFlow, LoginRequestWorkflowAsync, RegisterRequestWorkflowAsync } from "../ApplicationLayer/Workflows";
+import { AccessPermissionRequest, BaseRequest,GetAppRequest, LoginRequest, RegisterRequest } from "./Requests";
+import {  ConstructAppWorkFlow, GetAccessPermissionWorkFlowAsync, LoginRequestWorkflowAsync, RegisterRequestWorkflowAsync } from "../ApplicationLayer/Workflows";
 import { IOServer } from "../DomainLayer/Domain.Room/Room.AggregateRoot";
 
 export const registerRequestController = Router()
@@ -39,7 +39,7 @@ export function AddBuyAppController(server: IOServer) {
 
     buyAppController.post("/", (req, res) => {
 
-        processRequest<BuyRequest>(BuyAppWorkFlowAsync, req, res, server,)
+        processRequest<AccessPermissionRequest>(GetAccessPermissionWorkFlowAsync, req, res, server,)
     })
 }
 

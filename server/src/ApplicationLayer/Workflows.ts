@@ -2,52 +2,47 @@ import { Bussiness } from "../DomainLayer/Domain.Customer/Customer.AggregateRoot
 import { AcountManagerId, BussinessId, ReferenceKey } from "../DomainLayer/Domain.Customer/Customer.ValueObjects";
 import { TableLayout } from "../DomainLayer/Domain.Order/Order.AggregateRoot";
 import { IOServer, Room } from "../DomainLayer/Domain.Room/Room.AggregateRoot";
-import { BuyRequest, GetAppRequest, LoginRequest, RegisterRequest } from "../PresentationLayer/Requests";
+import { AccessPermissionRequest, GetAppRequest, LoginRequest, RegisterRequest } from "../PresentationLayer/Requests";
 import { BussinessConfigFile } from "./Entities";
 import { ConfigRepository } from "./Repositories";
-import { AuthenticationResponse, BuyResponse, FailedAuthenticationResponse, SucceedAuthenticationResponse } from "./Responses";
+import { AcceptedAccessPermissionResponse, AccessPermissionResponse, AuthenticationResponse, DeniedAccessPermissionResponse, FailedAuthenticationResponse, SucceedAuthenticationResponse } from "./Responses";
 import { RondomIdGenarator } from "./Tools";
 import { AcountManager } from "../DomainLayer/Domain.Customer/Customer.Entities";
 import { Menu } from "../DomainLayer/Domain.Product/Product.AggregateRoot";
 import { RoomId } from "../DomainLayer/Domain.Room/Room.ValueObjects";
-import { AuthenticationService } from "./Authentication";
+import { AuthenticationService } from "./services/Authentication";
+import { AccessPermissionRequestManager } from "./services/Security";
 
 
 
-export async function BuyAppWorkFlowAsync(request: BuyRequest, ioServerAggregate: IOServer): Promise<BuyResponse> {
 
+export async function GetAccessPermissionWorkFlowAsync(request: AccessPermissionRequest, ioServerAggregate: IOServer): Promise<AccessPermissionResponse> {
 
-    return new Promise<BuyResponse>((resolve, reject) => {
+    return new Promise<AccessPermissionResponse>(async (resolve, reject) => {
 
-        const requestId = RondomIdGenarator.CreateId(7)
-        ioServerAggregate.listen(`buy`, (response: boolean) => {
+        const response = await AccessPermissionRequestManager.SendRequestAndWaitForRepsonseAsync(request);
 
-            if (response) {
-                const repo = ConfigRepository.GetRepo();
-                const key = ReferenceKey.Create(request.packageType, request.amount)
-                const roomId = RondomIdGenarator.CreateId(30)
-                const bussiness = new Bussiness
-                    (
-                        new BussinessId(RondomIdGenarator.CreateId(15))
-                        , roomId
-                        , request.bussinessName
-                        , key);
+        if (response) {
+            const repo = ConfigRepository.GetRepo();
+            const key = ReferenceKey.Create(request.packageType, request.amount)
+            const roomId = RondomIdGenarator.CreateId(30)
+            const bussiness = new Bussiness
+                (
+                    new BussinessId(RondomIdGenarator.CreateId(15))
+                    , roomId
+                    , request.bussinessName
+                    , key);
 
-                const acountManagerId = new AcountManagerId(RondomIdGenarator.CreateId(15))
-                const acountManager = new AcountManager(acountManagerId, request.customerName, request.customerSurname)
-                bussiness.addTo(acountManager);
-                const config = new BussinessConfigFile(bussiness, new TableLayout(), new Menu())
-                repo.add(config)
-                resolve(new BuyResponse(acountManagerId, bussiness.id, roomId))
-            }
-            else {
-                reject()
-            }
-
-
-        })
-        ioServerAggregate.stopListen("buy")
-
+            const acountManagerId = new AcountManagerId(RondomIdGenarator.CreateId(15))
+            const acountManager = new AcountManager(acountManagerId, request.customerName, request.customerSurname)
+            bussiness.addTo(acountManager);
+            const config = new BussinessConfigFile(bussiness, new TableLayout(), new Menu())
+            repo.add(config)
+            resolve(new AcceptedAccessPermissionResponse(acountManagerId, bussiness.id, roomId))
+        }
+        else {
+            reject(new DeniedAccessPermissionResponse())
+        }
 
     })
 
@@ -87,7 +82,7 @@ export async function ConstructAppWorkFlow(request: GetAppRequest, ioServerAggre
 
     const room = new Room(ioServerAggregate.io, new RoomId(request.roomId))
     ioServerAggregate.addTo(room);
-    
+
 
 }
 

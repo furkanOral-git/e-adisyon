@@ -1,7 +1,7 @@
-import { LoginRequest, RegisterRequest } from "../PresentationLayer/Requests";
-import { User } from "./Entities";
-import { ConfigRepository, UserRepository } from "./Repositories";
-import { AuthenticationResponse, FailedAuthenticationResponse, SucceedAuthenticationResponse } from "./Responses";
+import { LoginRequest, RegisterRequest } from "../../PresentationLayer/Requests";
+import { ConfigRepository, UserRepository } from "../Repositories";
+import { AuthenticationResponse, FailedAuthenticationResponse, SucceedAuthenticationResponse } from "../Responses";
+import { User } from "./Security";
 
 export class AuthenticationService {
 
@@ -21,7 +21,7 @@ export class AuthenticationService {
         const configRepo = ConfigRepository.GetRepo();
         const userRepo = UserRepository.GetRepo();
         const user = userRepo.getBy(u => u.email == req.email && u.password == req.password);
-        console.log("Login Çalıştı")
+        
         if (!!user) {
 
             const referenceKey = configRepo.getKeyById(user.bussinessId)
@@ -30,7 +30,7 @@ export class AuthenticationService {
             }
             return new SucceedAuthenticationResponse(configRepo.getRoomIdById(user.bussinessId))
         }
-        console.log("Direkt Failed Authentication Result Dönüyor user değeri null")
+        
         return new FailedAuthenticationResponse("Email ya da şifrenizi yanlış girdiniz!")
     }
 }

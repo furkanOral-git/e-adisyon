@@ -21,30 +21,4 @@ export class BussinessConfigFile implements IDbEntity {
     }
 
 }
-export class User {
 
-    private __id: string;
-    private __bussinessId: string
-    private __email: string
-    private __password: string;
-
-    public get id() {
-        return this.__id;
-    }
-    public get bussinessId() {
-        return this.__bussinessId;
-    }
-    public get email() {
-        return this.__email;
-    }
-    public get password() {
-        return this.__password;
-    }
-    constructor(id: string, bussinessId: string, email: string, password: string) {
-
-        this.__id = id;
-        this.__bussinessId = bussinessId;
-        this.__email = email;
-        this.__password = password;
-    }
-}

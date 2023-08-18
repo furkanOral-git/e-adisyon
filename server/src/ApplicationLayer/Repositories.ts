@@ -1,7 +1,8 @@
 import { IDbEntity } from "../DomainLayer/Common/Common.Abstracts"
 import { AcountManager } from "../DomainLayer/Domain.Customer/Customer.Entities"
-import { BussinessId, ReferenceKey } from "../DomainLayer/Domain.Customer/Customer.ValueObjects"
-import { BussinessConfigFile, User } from "./Entities"
+import { ReferenceKey } from "../DomainLayer/Domain.Customer/Customer.ValueObjects"
+import { BussinessConfigFile } from "./Entities"
+import { User } from "./services/Security"
 
 export interface IRepository<TEntity extends IDbEntity> {
 

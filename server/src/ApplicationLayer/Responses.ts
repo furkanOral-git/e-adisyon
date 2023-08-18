@@ -14,7 +14,16 @@ export class AppResponse {
     }
 
 }
-export class BuyResponse {
+export abstract class AccessPermissionResponse {
+    private __permissionStatus: boolean;
+    public get status() {
+        return this.__permissionStatus;
+    }
+    constructor(permissionStatus: boolean) {
+        this.__permissionStatus = permissionStatus;
+    }
+}
+export class AcceptedAccessPermissionResponse extends AccessPermissionResponse {
 
     private __acountManagerId: AcountManagerId;
     private __bussinessId: BussinessId;
@@ -29,12 +38,18 @@ export class BuyResponse {
         return this.__roomId;
     }
     constructor(acountManagerId: AcountManagerId, bussinessId: BussinessId, roomId: string) {
+        super(true)
         this.__roomId = roomId;
         this.__acountManagerId = acountManagerId;
         this.__bussinessId = bussinessId;
 
     }
 
+}
+export class DeniedAccessPermissionResponse extends AccessPermissionResponse {
+    constructor() {
+        super(false)
+    }
 }
 
 export abstract class AuthenticationResponse {
@@ -50,9 +65,9 @@ export abstract class AuthenticationResponse {
 }
 
 export class SucceedAuthenticationResponse extends AuthenticationResponse {
-    
+
     private __roomId: string
-    
+
     public get roomId() {
         return this.__roomId
     }
