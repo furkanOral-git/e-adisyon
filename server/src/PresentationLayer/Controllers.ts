@@ -1,7 +1,8 @@
 import { Router } from "express";
-import { AccessPermissionRequest, BaseRequest,GetAppRequest, LoginRequest, RegisterRequest } from "./Requests";
-import {  ConstructAppWorkFlow, GetAccessPermissionWorkFlowAsync, LoginRequestWorkflowAsync, RegisterRequestWorkflowAsync } from "../ApplicationLayer/Workflows";
+import { AccessPermissionRequest, BaseRequest, GetAppRequest, LoginRequest, RegisterRequest } from "./Requests";
+import { ConstructAppWorkFlow, GetAccessPermissionWorkFlowAsync, LoginRequestWorkflowAsync, RegisterRequestWorkflowAsync } from "../ApplicationLayer/Workflows";
 import { IOServer } from "../DomainLayer/Domain.Room/Room.AggregateRoot";
+import { AccessPermissionRequestManager } from "../ApplicationLayer/services/Security";
 
 export const registerRequestController = Router()
 export const loginRequestController = Router()
@@ -10,9 +11,15 @@ export const buyAppController = Router()
 //2
 export function AddRegisterRequestController(server: IOServer) {
 
-    registerRequestController.post("/", (req, res) => {
-
-        processRequest<RegisterRequest>(RegisterRequestWorkflowAsync, req, res, server);
+    registerRequestController.post("/:id", (req, res) => {
+        
+        const id = req.params.id
+        if(!AccessPermissionRequestManager.VerifyResponseAndClearIfExist(id)){
+            res.status(400).json("Geçersiz istek")
+        }
+        else{
+            processRequest<RegisterRequest>(RegisterRequestWorkflowAsync, req, res, server);
+        }
     })
 }
 export function AddLoginRequestController(server: IOServer) {
@@ -56,13 +63,13 @@ async function processRequest<TRequest extends BaseRequest>(
     req.on("end", async () => {
 
         const requestObject = JSON.parse(requestData) as TRequest;
-        
+
         if (requestObject) {
-            
-            const response = await workflowFunction(requestObject, server).catch((err : Error) => {
+
+            const response = await workflowFunction(requestObject, server).catch((err: Error) => {
                 res.status(400).json(err.message);
             });
-            
+
             res.status(200).json(response);
         } else {
             res.status(400).json("Unvalid JSON object Type");

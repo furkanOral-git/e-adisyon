@@ -4,40 +4,44 @@ import { IoClientModel } from "./Models";
 
 export class IoClient {
 
-    private socket: Socket;
+    private __socket: Socket | undefined;
     private __model: IoClientModel
 
     public listeners: { [event: string]: (data: any) => void };
 
-    private constructor(domain: string, port: number, model: IoClientModel) {
+    private constructor(model: IoClientModel) {
 
         this.listeners = {}
-        this.socket = io(`http://${domain}:${port}`)
+
         this.__model = model;
     }
-    
+   
+    connect(domain: string, port: number) {
+
+        this.__socket = io(`http://${domain}:${port}`)
+    }
     sendNotification(event: string, mesaj: string) {
 
-        this.socket.emit(event, mesaj)
+        this.__socket?.emit(event, mesaj)
     }
     sendData(event: string, data: {}) {
 
-        this.socket.emit(event, data)
+        this.__socket?.emit(event, data)
     }
     listen(event: string, listener: (data: any) => void) {
 
-        this.socket.on(event, listener)
+        this.__socket?.on(event, listener)
         this.listeners[event] = listener;
     }
     off(event: string): void {
 
-        this.socket.off(event, this.listeners[event])
+        this.__socket?.off(event, this.listeners[event])
     }
     disconnect() {
 
-        if (!!this.socket) {
+        if (!!this.__socket) {
 
-            this.socket.disconnect();
+            this.__socket.disconnect();
         }
     }
 }

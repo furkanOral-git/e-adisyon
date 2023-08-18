@@ -40,7 +40,17 @@ export class AccessPermissionRequestManager {
         const requests = Object.values(this.__requests)
         return requests.some(req => req.accessorInfos == request)
     }
-    
+    static VerifyResponseAndClearIfExist(id: string) {
+
+        if (Object.keys(this.__responses).includes(id)) {
+            
+            delete this.__responses[id]
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
     static async SendRequestAndWaitForRepsonseAsync(request: AccessPermissionRequest): Promise<PermissionResult> {
 
         return new Promise<PermissionResult>((resolve, reject) => {
