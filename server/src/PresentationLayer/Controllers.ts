@@ -1,23 +1,23 @@
 import { Router } from "express";
-import { AccessPermissionRequest, BaseRequest, GetAppRequest, LoginRequest, RegisterRequest } from "./Requests";
-import { ConstructAppWorkFlow, GetAccessPermissionWorkFlowAsync, LoginRequestWorkflowAsync, RegisterRequestWorkflowAsync } from "../ApplicationLayer/Workflows";
+import { AccessPermissionRequest, BaseRequest, GetSocketConnectionRequest, LoginRequest, RegisterRequest } from "./Requests";
+import { GetAccessPermissionWorkFlowAsync, GetSocketConnectionWorkFlow, LoginRequestWorkflowAsync, RegisterRequestWorkflowAsync } from "../ApplicationLayer/Workflows";
 import { IOServer } from "../DomainLayer/Domain.Room/Room.AggregateRoot";
 import { AccessPermissionRequestManager } from "../ApplicationLayer/services/Security";
 
 export const registerRequestController = Router()
 export const loginRequestController = Router()
-export const appRequestController = Router()
-export const buyAppController = Router()
+export const socketConnectionRequestController = Router()
+export const accessPermissionRequestController = Router()
 //2
 export function AddRegisterRequestController(server: IOServer) {
 
     registerRequestController.post("/:id", (req, res) => {
-        
+
         const id = req.params.id
-        if(!AccessPermissionRequestManager.VerifyResponseAndClearIfExist(id)){
+        if (!AccessPermissionRequestManager.VerifyResponseAndClearIfExist(id)) {
             res.status(400).json("Geçersiz istek")
         }
-        else{
+        else {
             processRequest<RegisterRequest>(RegisterRequestWorkflowAsync, req, res, server);
         }
     })
@@ -30,21 +30,22 @@ export function AddLoginRequestController(server: IOServer) {
     })
 }
 //3
-export function AddAppRequestController(server: IOServer) {
+export function AddSocketConnectionRequestController(server: IOServer) {
 
 
-    appRequestController.post("/", (req, res) => {
-
-        processRequest<GetAppRequest>(ConstructAppWorkFlow, req, res, server)
+    socketConnectionRequestController.post("/:token", (req, res) => {
+        
+        req.params.token
+        processRequest<GetSocketConnectionRequest>(GetSocketConnectionWorkFlow, req, res, server)
     })
 
 }
 //1
 
-export function AddBuyAppController(server: IOServer) {
+export function AddAccessPermissionRequestController(server: IOServer) {
 
 
-    buyAppController.post("/", (req, res) => {
+    accessPermissionRequestController.post("/", (req, res) => {
 
         processRequest<AccessPermissionRequest>(GetAccessPermissionWorkFlowAsync, req, res, server,)
     })

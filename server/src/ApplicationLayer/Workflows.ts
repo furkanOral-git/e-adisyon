@@ -1,13 +1,13 @@
-import { Bussiness } from "../DomainLayer/Domain.Customer/Customer.AggregateRoot";
-import { AcountManagerId, BussinessId, ReferenceKey } from "../DomainLayer/Domain.Customer/Customer.ValueObjects";
+import { Bussiness } from "../DomainLayer/Domain.AcountManager/AcountManager.AggregateRoot";
+import { AcountManagerId, BussinessId, ReferenceKey } from "../DomainLayer/Domain.AcountManager/AcountManager.ValueObjects";
 import { TableLayout } from "../DomainLayer/Domain.Order/Order.AggregateRoot";
 import { IOServer, Room } from "../DomainLayer/Domain.Room/Room.AggregateRoot";
-import { AccessPermissionRequest, GetAppRequest, LoginRequest, RegisterRequest } from "../PresentationLayer/Requests";
+import { AccessPermissionRequest, GetSocketConnectionRequest, LoginRequest, RegisterRequest } from "../PresentationLayer/Requests";
 import { BussinessConfigFile } from "./Entities";
 import { ConfigRepository } from "./Repositories";
-import { AcceptedAccessPermissionResponse, AccessPermissionResponse, AuthenticationResponse, DeniedAccessPermissionResponse, FailedAuthenticationResponse, SucceedAuthenticationResponse } from "./Responses";
+import { AcceptedAccessPermissionResponse, AccessPermissionResponse, DeniedAccessPermissionResponse } from "./Responses";
 import { RondomIdGenarator } from "./Tools";
-import { AcountManager } from "../DomainLayer/Domain.Customer/Customer.Entities";
+import { AcountManager } from "../DomainLayer/Domain.AcountManager/AcountManager.Entities";
 import { Menu } from "../DomainLayer/Domain.Product/Product.AggregateRoot";
 import { RoomId } from "../DomainLayer/Domain.Room/Room.ValueObjects";
 import { AuthenticationService } from "./services/Authentication";
@@ -28,10 +28,9 @@ export async function GetAccessPermissionWorkFlowAsync(request: AccessPermission
             const roomId = RondomIdGenarator.CreateId(30)
             const bussiness = new Bussiness
                 (
-                    new BussinessId(RondomIdGenarator.CreateId(15))
-                    , roomId
-                    , request.bussinessName
-                    , key);
+                    new BussinessId(RondomIdGenarator.CreateId(15)),
+                    request.bussinessName
+                );
 
             const acountManagerId = new AcountManagerId(RondomIdGenarator.CreateId(15))
             const acountManager = new AcountManager(acountManagerId, request.customerName, request.customerSurname)
@@ -78,7 +77,8 @@ export async function LoginRequestWorkflowAsync(request: LoginRequest): Promise<
     })
 
 }
-export async function ConstructAppWorkFlow(request: GetAppRequest, ioServerAggregate: IOServer) {
+//SocketRequestWorkFlow
+export async function GetSocketConnectionWorkFlow(request: GetSocketConnectionRequest, ioServerAggregate: IOServer) {
 
     const room = new Room(ioServerAggregate.io, new RoomId(request.roomId))
     ioServerAggregate.addTo(room);

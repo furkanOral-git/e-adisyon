@@ -1,4 +1,4 @@
-import { AcountManagerId, BussinessId, ReferenceKey } from "../DomainLayer/Domain.Customer/Customer.ValueObjects";
+import { AcountManagerId, BussinessId } from "../DomainLayer/Domain.AcountManager/AcountManager.ValueObjects";
 
 
 
@@ -28,6 +28,7 @@ export class AcceptedAccessPermissionResponse extends AccessPermissionResponse {
     private __acountManagerId: AcountManagerId;
     private __bussinessId: BussinessId;
     private __roomId: string
+
     public get acountManagerId() {
         return this.__acountManagerId;
     }
@@ -52,35 +53,5 @@ export class DeniedAccessPermissionResponse extends AccessPermissionResponse {
     }
 }
 
-export abstract class AuthenticationResponse {
 
-    __succeed: boolean
-    __message: string
-
-    constructor(succeed: boolean, message: string = "") {
-
-        this.__message = message;
-        this.__succeed = succeed;
-    }
-}
-
-export class SucceedAuthenticationResponse extends AuthenticationResponse {
-
-    private __roomId: string
-
-    public get roomId() {
-        return this.__roomId
-    }
-
-    constructor(roomId: string) {
-        super(true)
-        this.__roomId = roomId;
-    }
-}
-export class FailedAuthenticationResponse extends AuthenticationResponse {
-
-    constructor(message: string) {
-        super(false, message)
-    }
-}
 

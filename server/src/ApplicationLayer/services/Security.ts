@@ -1,12 +1,17 @@
 import { AccessPermissionRequest } from "../../PresentationLayer/Requests";
 import { RondomIdGenarator } from "../Tools";
+import crypto from 'crypto';
+
 
 export class User {
 
     private __id: string;
     private __bussinessId: string
+    private __name: string
+    private __surname: string
     private __email: string
     private __password: string;
+    
 
     public get id() {
         return this.__id;
@@ -14,20 +19,50 @@ export class User {
     public get bussinessId() {
         return this.__bussinessId;
     }
+    public get name() {
+        return this.__name;
+    }
     public get email() {
         return this.__email;
     }
     public get password() {
         return this.__password;
     }
-    constructor(id: string, bussinessId: string, email: string, password: string) {
+    constructor(id: string, bussinessId: string, email: string, password: string, name: string, surname: string) {
 
         this.__id = id;
         this.__bussinessId = bussinessId;
         this.__email = email;
         this.__password = password;
+        this.__name = name;
+        this.__surname = surname;
     }
 }
+export class SecurityManager {
+
+    static hashString(input: string, algorithm: string = 'sha256'): string {
+
+        const hash = crypto.createHash(algorithm);
+        hash.update(input);
+        return hash.digest('hex');
+    }
+    static base64UrlEncode(jsonObj: object): string {
+
+        const jsonString = JSON.stringify(jsonObj);
+        const base64 = Buffer.from(jsonString).toString('base64');
+        const base64Url = base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+        return base64Url;
+    }
+    static hashPassword(password: string, passwordSalt: string): string {
+
+        return this.hashString(password + passwordSalt);
+    }
+    static VerifyPassword(password: string, passwordSalt: string, hashedPassword: string) {
+        const hash = this.hashPassword(password, passwordSalt);
+        return hashedPassword == hash
+    }
+}
+
 export class AccessPermissionRequestManager {
 
     private static __requests: { [requestId: string]: WaitedPermissionRequest } = {}
@@ -43,7 +78,7 @@ export class AccessPermissionRequestManager {
     static VerifyResponseAndClearIfExist(id: string) {
 
         if (Object.keys(this.__responses).includes(id)) {
-            
+
             delete this.__responses[id]
             return true;
         }

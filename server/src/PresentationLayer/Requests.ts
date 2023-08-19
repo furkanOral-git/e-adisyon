@@ -1,4 +1,4 @@
-import {  AcceptedAccessPermissionResponse, SucceedAuthenticationResponse } from "../ApplicationLayer/Responses";
+import {  AcceptedAccessPermissionResponse } from "../ApplicationLayer/Responses";
 
 
 export abstract class BaseRequest {
@@ -6,18 +6,12 @@ export abstract class BaseRequest {
 
 
 }
-export class GetAppRequest extends BaseRequest {
+export class GetSocketConnectionRequest extends BaseRequest {
 
 
-    private __roomId: string
-
-    public get roomId() {
-
-        return this.__roomId
-    }
+    
     constructor(res: SucceedAuthenticationResponse) {
         super()
-        this.__roomId = res.roomId;
     }
 }
 export class LoginRequest extends BaseRequest {
@@ -116,8 +110,4 @@ export class AccessPermissionRequest extends BaseRequest {
 
 }
 
-export enum PackageTypes {
-    Trial = "TRIAL",
-    Monthly = "MONTHLY",
-    Yearly = "YEARLY"
-}
+

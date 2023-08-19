@@ -21,13 +21,18 @@ export abstract class Id implements IEntityId {
         this.__value = value;
 
     }
-
+    Update(newValue: string) {
+        this.__value = newValue;
+    }
     IsEqualTo<T extends Id>(id: T): boolean {
         return id.__value == this.__value ? true : false
     }
 
 }
-
+export class TableLayoutId extends Id {
+}
+export class MenuId extends Id {
+}
 export class Money implements IValueObject {
 
 }

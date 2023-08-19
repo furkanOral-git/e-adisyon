@@ -1,14 +1,18 @@
-import { IDbEntity } from "../Common/Common.Abstracts";
 import { AggregateRoot } from "../Common/Common.AggregateRoot";
-import { BussinessId } from "../Domain.Customer/Customer.ValueObjects";
+import { MenuId } from "../Common/Common.ValueObjects";
 import { Product } from "./Product.Entities";
-import { ProductId } from "./Product.ValueObjects";
+import {  ProductId } from "./Product.ValueObjects";
 
 export class Menu extends AggregateRoot<ProductId, Product>{
 
-    constructor() {
+    private __id: MenuId
 
+    public get id() {
+
+        return this.__id;
+    }
+    constructor(id: MenuId) {
         super()
-        
+        this.__id = id;
     }
 }

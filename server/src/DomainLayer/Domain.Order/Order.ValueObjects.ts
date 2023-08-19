@@ -10,8 +10,7 @@ export class OrderId extends Id {
 export class OrderItemId extends Id {
 
 }
-export class TableLayoutId extends Id{
-}
+
 
 
 export class TableNumber implements IValueObject {

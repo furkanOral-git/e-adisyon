@@ -2,7 +2,7 @@ import express from "express";
 import { Server } from "socket.io";
 import { createServer } from "http"
 import { exceptionMiddleware } from "./middleware";
-import { AddAppRequestController, AddBuyAppController, AddLoginRequestController, AddRegisterRequestController, appRequestController, buyAppController, loginRequestController, registerRequestController } from "./PresentationLayer/Controllers";
+import { AddAccessPermissionRequestController, AddLoginRequestController, AddRegisterRequestController, AddSocketConnectionRequestController, accessPermissionRequestController, loginRequestController, registerRequestController, socketConnectionRequestController } from "./PresentationLayer/Controllers";
 import { IOServer } from "./DomainLayer/Domain.Room/Room.AggregateRoot";
 
 export default class ServerManagement {
@@ -17,8 +17,8 @@ export default class ServerManagement {
         app.use(exceptionMiddleware)
         app.use("/register", registerRequestController)
         app.use("/login", loginRequestController)
-        app.use("/buy", buyAppController)
-        app.use("/app", appRequestController)
+        app.use("/permission", accessPermissionRequestController)
+        app.use("/connection", socketConnectionRequestController)
         ServerManagement.__ = new IOServer(new Server(httpServer, {
             cors: {
                 origin: "*",
@@ -32,10 +32,10 @@ export default class ServerManagement {
 
     private static AddControllers() {
 
-        AddBuyAppController(this.__);
+        AddAccessPermissionRequestController(this.__);
         AddLoginRequestController(this.__);
         AddRegisterRequestController(this.__);
-        AddAppRequestController(this.__);
+        AddSocketConnectionRequestController(this.__);
     }
 
 

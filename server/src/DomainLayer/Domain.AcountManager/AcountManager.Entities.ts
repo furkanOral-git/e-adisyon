@@ -1,12 +1,12 @@
 import { IDomainEntity } from "../Common/Common.Abstracts";
-import { AcountManagerId } from "./Customer.ValueObjects";
+import { AcountManagerId } from "./AcountManager.ValueObjects";
 
 export class AcountManager implements IDomainEntity<AcountManagerId> {
 
     __id: AcountManagerId;
     private __name: string;
     private __surname: string;
-   
+
     public get name() {
         return this.__name;
     }

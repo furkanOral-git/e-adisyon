@@ -19,6 +19,7 @@ export class ProductCategory implements IValueObject {
 export class ProductId extends Id{
 
 }
+
 export enum ProductStatus {
     ReadyForOrder,
     CanNotReadyForOrder,
