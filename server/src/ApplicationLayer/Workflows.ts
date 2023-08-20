@@ -1,90 +1,94 @@
 import { Bussiness } from "../DomainLayer/Domain.AcountManager/AcountManager.AggregateRoot";
-import { AcountManagerId, BussinessId, ReferenceKey } from "../DomainLayer/Domain.AcountManager/AcountManager.ValueObjects";
-import { TableLayout } from "../DomainLayer/Domain.Order/Order.AggregateRoot";
-import { IOServer, Room } from "../DomainLayer/Domain.Room/Room.AggregateRoot";
+import { AcountManagerId, BussinessId } from "../DomainLayer/Domain.AcountManager/AcountManager.ValueObjects";
+import { IOServer } from "../DomainLayer/Domain.Room/Room.AggregateRoot";
 import { AccessPermissionRequest, GetSocketConnectionRequest, LoginRequest, RegisterRequest } from "../PresentationLayer/Requests";
-import { BussinessConfigFile } from "./Entities";
-import { ConfigRepository } from "./Repositories";
-import { AcceptedAccessPermissionResponse, AccessPermissionResponse, DeniedAccessPermissionResponse } from "./Responses";
+import { AcceptedPermissionResponse, DeniedPermissionResponse, PermissionResponse } from "./Responses";
 import { RondomIdGenarator } from "./Tools";
 import { AcountManager } from "../DomainLayer/Domain.AcountManager/AcountManager.Entities";
-import { Menu } from "../DomainLayer/Domain.Product/Product.AggregateRoot";
-import { RoomId } from "../DomainLayer/Domain.Room/Room.ValueObjects";
-import { AuthenticationService } from "./services/Authentication";
-import { AccessPermissionRequestManager } from "./services/Security";
+import { AuthenticationResponse, AuthenticationService, FailedAuthenticationResponse, SucceedAuthenticationResponse } from "./services/Authentication";
+import { AccessPermissionRequestManager, UserService } from "./services/Services";
+import { BussinessRepository, JWTRepository } from "./Repositories";
 
 
 
+export class WorkflowFunctions {
 
-export async function GetAccessPermissionWorkFlowAsync(request: AccessPermissionRequest, ioServerAggregate: IOServer): Promise<AccessPermissionResponse> {
+    static async GetAccessPermissionWorkFlowAsync(request: AccessPermissionRequest, ioServerAggregate: IOServer): Promise<PermissionResponse> {
 
-    return new Promise<AccessPermissionResponse>(async (resolve, reject) => {
+        return new Promise<PermissionResponse>(async (resolve, reject) => {
 
-        const response = await AccessPermissionRequestManager.SendRequestAndWaitForRepsonseAsync(request);
+            await AccessPermissionRequestManager.SendRequestAndWaitForRepsonseAsync(request).then((res) => {
+                const bussinessId = new BussinessId(RondomIdGenarator.CreateId(15))
+                const bussiness = new Bussiness
+                    (
+                        bussinessId,
+                        request.bussinessName
+                    );
 
-        if (response) {
-            const repo = ConfigRepository.GetRepo();
-            const key = ReferenceKey.Create(request.packageType, request.amount)
-            const roomId = RondomIdGenarator.CreateId(30)
-            const bussiness = new Bussiness
-                (
-                    new BussinessId(RondomIdGenarator.CreateId(15)),
-                    request.bussinessName
-                );
+                const acountManagerId = new AcountManagerId(RondomIdGenarator.CreateId(15))
+                const acountManager = new AcountManager(acountManagerId, res.accessorName)
+                bussiness.addTo(acountManager);
+                BussinessRepository.GetRepo().add(bussiness)
+                resolve(new AcceptedPermissionResponse(acountManagerId, bussinessId, res))
 
-            const acountManagerId = new AcountManagerId(RondomIdGenarator.CreateId(15))
-            const acountManager = new AcountManager(acountManagerId, request.customerName, request.customerSurname)
-            bussiness.addTo(acountManager);
-            const config = new BussinessConfigFile(bussiness, new TableLayout(), new Menu())
-            repo.add(config)
-            resolve(new AcceptedAccessPermissionResponse(acountManagerId, bussiness.id, roomId))
-        }
-        else {
-            reject(new DeniedAccessPermissionResponse())
-        }
+            }).catch((err => {
 
-    })
+                reject(new DeniedPermissionResponse(err))
+            }))
+        })
 
+    }
+    static async RegisterRequestWorkflowAsync(request: RegisterRequest): Promise<AuthenticationResponse> {
+
+        return new Promise<AuthenticationResponse>((resolve, reject) => {
+            try {
+
+                const response = AuthenticationService.Sign(request)
+                if (response instanceof FailedAuthenticationResponse) {
+                    reject(response);
+                }
+                resolve(response);
+
+            } catch (error: any) {
+                reject(new FailedAuthenticationResponse(error.message))
+            }
+
+        })
+    }
+    static async LoginRequestWorkflowAsync(request: LoginRequest): Promise<AuthenticationResponse> {
+
+        return new Promise<AuthenticationResponse>((resolve, reject) => {
+
+            try {
+
+                const user = UserService.GetService().Login(request);
+                const token = JWTRepository.GetRepo().getBy(jwt => jwt.tokenId == user.tokenId);
+                if (!!token) {
+
+                    const accessToken = AuthenticationService.CreateAccessToken(user, token)
+                    resolve(new SucceedAuthenticationResponse(accessToken.signature, token.signature))
+
+                }
+                else {
+                    reject(new FailedAuthenticationResponse("Token Not Found"))
+                }
+
+            } catch (error: any) {
+
+                reject(new FailedAuthenticationResponse(error.message))
+            }
+
+        })
+
+    }
+    //SocketRequestWorkFlow
+    static async GetSocketConnectionWorkFlow(request: GetSocketConnectionRequest, ioServerAggregate: IOServer) {
+
+
+    }
 }
-export async function RegisterRequestWorkflowAsync(request: RegisterRequest): Promise<AuthenticationResponse> {
-
-    return new Promise<AuthenticationResponse>((resolve, reject) => {
-        const response = AuthenticationService.Register(request);
-        if (response.__succeed) {
-
-            resolve(response as SucceedAuthenticationResponse)
-        }
-        else {
-
-            reject(response as FailedAuthenticationResponse)
-        }
-    })
-}
-export async function LoginRequestWorkflowAsync(request: LoginRequest): Promise<AuthenticationResponse> {
-
-    return new Promise<AuthenticationResponse>((resolve, reject) => {
-
-        const response = AuthenticationService.Verify(request);
-        console.log(`Verify Methodu içerisinde : ${response} objesi`)
-        if (response.__succeed) {
-
-            resolve(response as SucceedAuthenticationResponse)
-        }
-        else {
-
-            reject(response as FailedAuthenticationResponse)
-        }
-    })
-
-}
-//SocketRequestWorkFlow
-export async function GetSocketConnectionWorkFlow(request: GetSocketConnectionRequest, ioServerAggregate: IOServer) {
-
-    const room = new Room(ioServerAggregate.io, new RoomId(request.roomId))
-    ioServerAggregate.addTo(room);
 
 
-}
 
 
 

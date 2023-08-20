@@ -1,5 +1,5 @@
 import { AcountManagerId, BussinessId } from "../DomainLayer/Domain.AcountManager/AcountManager.ValueObjects";
-
+import { WaitedPermissionRequest } from "../PresentationLayer/Requests";
 
 
 export class AppResponse {
@@ -14,44 +14,125 @@ export class AppResponse {
     }
 
 }
-export abstract class AccessPermissionResponse {
-    private __permissionStatus: boolean;
-    public get status() {
-        return this.__permissionStatus;
+
+//RESULTS
+
+export abstract class PermissionResult {
+
+    private __result: boolean
+    private __request: WaitedPermissionRequest
+
+    public get id() {
+        return this.__request.requestId;
     }
-    constructor(permissionStatus: boolean) {
-        this.__permissionStatus = permissionStatus;
+    public get result() {
+        return this.__result;
+    }
+    public get subscribeType() {
+        return this.__request.subscribeType
+    }
+    public get timeAmount() {
+        return this.__request.timeAmount
+    }
+    public get accessorBussinessName() {
+        return this.__request.bussinessName
+    }
+    public get accessorName() {
+        return this.__request.customerName
+    }
+    public get accessorEmail() {
+        return this.__request.email
+    }
+
+    constructor(request: WaitedPermissionRequest, result: boolean) {
+        this.__request = request;
+        this.__result = result;
+    }
+
+}
+export class AcceptedPermissionResult extends PermissionResult {
+
+    constructor(request: WaitedPermissionRequest) {
+
+        super(request, true)
     }
 }
-export class AcceptedAccessPermissionResponse extends AccessPermissionResponse {
+export class TimeoutPermissionResult extends PermissionResult {
 
-    private __acountManagerId: AcountManagerId;
-    private __bussinessId: BussinessId;
-    private __roomId: string
+    private __message: string
+    public get message() {
+        return this.__message;
+    }
+    constructor(request: WaitedPermissionRequest) {
 
-    public get acountManagerId() {
+        super(request, false)
+        this.__message = "Request Timed Out"
+    }
+}
+export class RejectedPermissionResult extends PermissionResult {
+
+    private __message: string
+    public get message() {
+        return this.__message;
+    }
+    constructor(request: WaitedPermissionRequest) {
+
+        super(request, false)
+        this.__message = "Rejected Request"
+    }
+}
+
+//RESPONSES
+
+export abstract class PermissionResponse {
+
+    private __results: PermissionResult
+
+    public get results() {
+        return this.__results;
+    }
+
+    constructor(results: PermissionResult) {
+
+        this.__results = results;
+    }
+}
+export class AcceptedPermissionResponse extends PermissionResponse {
+
+    private __acountManagerId: AcountManagerId
+    private __bussinessId: BussinessId
+
+    public get managerId() {
         return this.__acountManagerId;
     }
     public get bussinessId() {
         return this.__bussinessId;
     }
-    public get roomId() {
-        return this.__roomId;
-    }
-    constructor(acountManagerId: AcountManagerId, bussinessId: BussinessId, roomId: string) {
-        super(true)
-        this.__roomId = roomId;
+
+    constructor(acountManagerId: AcountManagerId, bussinessId: BussinessId, permission: AcceptedPermissionResult) {
+        super(permission)
         this.__acountManagerId = acountManagerId;
         this.__bussinessId = bussinessId;
 
     }
-
 }
-export class DeniedAccessPermissionResponse extends AccessPermissionResponse {
-    constructor() {
-        super(false)
+export class DeniedPermissionResponse extends PermissionResponse {
+
+    constructor(permission: RejectedPermissionResult | TimeoutPermissionResult) {
+        super(permission)
     }
 }
+
+
+
+
+
+
+
+
+
+
+
 
 
 

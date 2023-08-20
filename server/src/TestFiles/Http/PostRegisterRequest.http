@@ -1,5 +1,20 @@
-POST http://localhost:3001/register
+POST http://localhost:3001/register/id=HAbRXWs5mpGiyz9
 Content-Type: application/json
-{
-    
+
+{   
+    "email" : "furkanoral@hotmail.com",
+    "name":"Furkan",
+    "surname":"Oral",
+    "password":"456332asdad",
+    "permission":{
+  "__permissionStatus": true,
+  "__acountManagerId": {
+    "__value": "HAbRXWs5mpGiyz9"
+  },
+  "__bussinessId": {
+    "__value": "95HAmRS87kI6rDy"
+  },
+  "__packageType": "TRIAL",
+  "__timeAmount": 15
+}
 }

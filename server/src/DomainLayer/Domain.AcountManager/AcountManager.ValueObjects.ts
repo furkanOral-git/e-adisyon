@@ -1,6 +1,6 @@
 import { IDbEntity } from "../Common/Common.Abstracts";
 import { Id, MenuId, TableLayoutId } from "../Common/Common.ValueObjects";
-import { Bussiness } from "./AcountManager.AggregateRoot";
+
 
 export class BussinessId extends Id {
 

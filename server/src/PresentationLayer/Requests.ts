@@ -1,4 +1,5 @@
-import {  AcceptedAccessPermissionResponse } from "../ApplicationLayer/Responses";
+import { AcceptedPermissionResponse, AcceptedPermissionResult, RejectedPermissionResult, TimeoutPermissionResult } from "../ApplicationLayer/Responses";
+import { SucceedAuthenticationResponse, PackageTypes } from "../ApplicationLayer/services/Authentication";
 
 
 export abstract class BaseRequest {
@@ -9,7 +10,7 @@ export abstract class BaseRequest {
 export class GetSocketConnectionRequest extends BaseRequest {
 
 
-    
+
     constructor(res: SucceedAuthenticationResponse) {
         super()
     }
@@ -41,7 +42,7 @@ export class RegisterRequest extends BaseRequest {
     private __name: string;
     private __surname: string;
     private __password: string;
-    private __response: AcceptedAccessPermissionResponse
+    private __permission: AcceptedPermissionResponse
 
     public get email() {
         return this.__email;
@@ -52,42 +53,47 @@ export class RegisterRequest extends BaseRequest {
     public get surname() {
         return this.__surname;
     }
-    public get response() {
-        return this.__response
+    public get permission() {
+        return this.__permission
     }
     public get password() {
         return this.__password;
     }
 
 
-    constructor(response: AcceptedAccessPermissionResponse, email: string, name: string, surname: string, password: string) {
+    constructor(permission: AcceptedPermissionResponse, email: string, name: string, surname: string, password: string) {
         super()
         this.__email = email;
-        this.__response = response;
+        this.__permission = permission;
         this.__name = name;
         this.__surname = surname;
         this.__password = password;
     }
 
 }
+export enum RequestState {
+    Waited,
+    Answered,
+    Timeout
+}
 export class AccessPermissionRequest extends BaseRequest {
 
 
-    private __packageType: PackageTypes
-    public get packageType() {
-        return this.__packageType;
+    private __subscribeType: PackageTypes
+    public get subscribeType() {
+        return this.__subscribeType;
     }
-    private __amount: number;
-    public get amount() {
-        return this.__amount;
-    }
-    private __customerName: string
-    public get customerName() {
-        return this.__customerName
+    private __timeAmount: number;
+    public get timeAmount() {
+        return this.__timeAmount;
     }
     private __customerSurname: string
     public get customerSurname() {
         return this.__customerSurname;
+    }
+    private __customerName: string
+    public get customerName() {
+        return this.__customerName
     }
     private __bussinessName: string
     public get bussinessName() {
@@ -98,10 +104,10 @@ export class AccessPermissionRequest extends BaseRequest {
         return this.__email;
     }
 
-    constructor(packageType: PackageTypes, amount: number, customerName: string, customerSurname: string, bussinessName: string, email: string) {
+    constructor(subscribeType: PackageTypes, timeAmount: number, customerName: string, customerSurname: string, bussinessName: string, email: string) {
         super()
-        this.__amount = amount;
-        this.__packageType = packageType;
+        this.__timeAmount = timeAmount;
+        this.__subscribeType = subscribeType;
         this.__customerName = customerName;
         this.__customerSurname = customerSurname;
         this.__bussinessName = bussinessName;
@@ -109,5 +115,43 @@ export class AccessPermissionRequest extends BaseRequest {
     }
 
 }
+export class WaitedPermissionRequest extends AccessPermissionRequest {
+
+    private __state: RequestState
+    private __requestId: string
+    public get requestId() {
+        return this.__requestId;
+    }
+    public get state() {
+        return this.__state;
+    }
+
+    constructor(subscribeType: PackageTypes,
+        timeAmount: number,
+        customerName: string,
+        customerSurname: string,
+        bussinessName: string,
+        email: string,
+        requestId: string
+    ) {
+        super(subscribeType, timeAmount, customerName, customerSurname, bussinessName, email)
+        this.__requestId = requestId
+        this.__state = RequestState.Waited
+    }
+
+    Reject(): RejectedPermissionResult {
+        this.__state = RequestState.Answered
+        return new RejectedPermissionResult(this)
+    }
+    Accept(): AcceptedPermissionResult {
+        this.__state = RequestState.Answered
+        return new AcceptedPermissionResult(this)
+    }
+    Timeout(): TimeoutPermissionResult {
+        this.__state = RequestState.Timeout
+        return new TimeoutPermissionResult(this)
+    }
+}
+
 
 

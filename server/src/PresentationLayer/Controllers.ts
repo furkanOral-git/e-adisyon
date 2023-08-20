@@ -1,8 +1,8 @@
 import { Router } from "express";
 import { AccessPermissionRequest, BaseRequest, GetSocketConnectionRequest, LoginRequest, RegisterRequest } from "./Requests";
-import { GetAccessPermissionWorkFlowAsync, GetSocketConnectionWorkFlow, LoginRequestWorkflowAsync, RegisterRequestWorkflowAsync } from "../ApplicationLayer/Workflows";
 import { IOServer } from "../DomainLayer/Domain.Room/Room.AggregateRoot";
-import { AccessPermissionRequestManager } from "../ApplicationLayer/services/Security";
+import { WorkflowFunctions } from "../ApplicationLayer/Workflows";
+import { AccessPermissionRequestManager } from "../ApplicationLayer/services/Services";
 
 export const registerRequestController = Router()
 export const loginRequestController = Router()
@@ -18,14 +18,14 @@ export function AddRegisterRequestController(server: IOServer) {
             res.status(400).json("Geçersiz istek")
         }
         else {
-            processRequest<RegisterRequest>(RegisterRequestWorkflowAsync, req, res, server);
+            processRequest<RegisterRequest>(WorkflowFunctions.RegisterRequestWorkflowAsync, req, res, server);
         }
     })
 }
 export function AddLoginRequestController(server: IOServer) {
     loginRequestController.post("/", (req, res) => {
 
-        processRequest<LoginRequest>(LoginRequestWorkflowAsync, req, res, server)
+        processRequest<LoginRequest>(WorkflowFunctions.LoginRequestWorkflowAsync, req, res, server)
 
     })
 }
@@ -34,9 +34,10 @@ export function AddSocketConnectionRequestController(server: IOServer) {
 
 
     socketConnectionRequestController.post("/:token", (req, res) => {
-        
-        req.params.token
-        processRequest<GetSocketConnectionRequest>(GetSocketConnectionWorkFlow, req, res, server)
+
+        const accessToken = req.params.token
+        console.log(accessToken)
+        processRequest<GetSocketConnectionRequest>(WorkflowFunctions.GetSocketConnectionWorkFlow, req, res, server)
     })
 
 }
@@ -47,7 +48,7 @@ export function AddAccessPermissionRequestController(server: IOServer) {
 
     accessPermissionRequestController.post("/", (req, res) => {
 
-        processRequest<AccessPermissionRequest>(GetAccessPermissionWorkFlowAsync, req, res, server,)
+        processRequest<AccessPermissionRequest>(WorkflowFunctions.GetAccessPermissionWorkFlowAsync, req, res, server,)
     })
 }
 

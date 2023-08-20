@@ -63,14 +63,14 @@ export class BussinessRepository implements IRepository<Bussiness>{
     }
     static GetRepo(): BussinessRepository {
 
-        if (!!this.__instance) {
+        if (!this.__instance) {
             this.__instance = new BussinessRepository();
         }
         return this.__instance;
     }
 
     add(entity: Bussiness): void {
-        throw new Error("Method not implemented.")
+        console.log("Eklendi")
     }
     remove(id: string): void {
         throw new Error("Method not implemented.")
@@ -92,7 +92,7 @@ export class BussinessRepository implements IRepository<Bussiness>{
 export class JWTRepository implements IRepository<JWTToken>{
 
     private static __instance: JWTRepository;
-
+    
     private constructor() {
 
     }

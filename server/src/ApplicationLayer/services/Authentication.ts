@@ -1,20 +1,60 @@
 import { LoginRequest, RegisterRequest } from "../../PresentationLayer/Requests";
-import { JWTRepository } from "../Repositories";
+import { EmailHasBeenUsedAlready } from "../Errors";
+import { JWTRepository, UserRepository } from "../Repositories";
+import { RondomIdGenarator } from "../Tools";
 import { SecurityManager, User } from "./Security";
-
-
+import { UserService } from "./Services";
 
 
 export class AuthenticationService {
 
     private static __repo: JWTRepository = JWTRepository.GetRepo()
+    private static __userService: UserService = UserService.GetService();
 
-    public static Register(req: RegisterRequest): AuthenticationResponse {
-        
+    public static Sign(req: RegisterRequest): AuthenticationResponse {
+
+        try {
+
+            const user = this.__userService.Register(req)
+            const refreshToken = this.CreateRefreshToken(user, req.permission.results.subscribeType, req.permission.results.timeAmount)
+            const accessToken = this.CreateAccessToken(user, refreshToken)
+            return new SucceedAuthenticationResponse(accessToken?.signature, refreshToken.signature)
+
+        } catch (error: any) {
+
+            if (error instanceof EmailHasBeenUsedAlready) {
+
+                return new FailedAuthenticationResponse("Email Zaten Kullanılıyor.")
+            }
+            return new FailedAuthenticationResponse("Sisteme Kayıt Edilirken Bir Sorun Oluştu!")
+        }
+
 
     }
-    public static Verify(): AuthenticationResponse {
 
+    static VerifyToken(subject: string, token: JWTToken): boolean {
+
+
+        const payload = token.signature.split(".")[1];
+        const decodedPayload = SecurityManager.base64UrlDecode(payload)
+        const jsonPayload = JSON.parse(decodedPayload) as { sub: string, name: string, exp: number };
+
+        if (!this.IsExpired(jsonPayload)) {
+            if (subject == jsonPayload.sub) {
+                return true;
+            }
+            else {
+                throw new Error("Token ve subject uyuşmuyor")
+            }
+        }
+        else {
+            return false;
+        }
+
+    }
+    private static IsExpired(payload: { "sub": string, "name": string, "exp": number }): boolean {
+        const currentTime = Math.floor(Date.now() / 1000);
+        return currentTime >= payload.exp
     }
     private static ExpireyForHour(hour: number): number {
         //3600 = 1 saat saniye cinsinden
@@ -28,10 +68,12 @@ export class AuthenticationService {
         const currentTime = Math.floor(Date.now() / 1000);
         return currentTime + expiresIn
     }
-    private static CreateAccessToken(user: User, refreshToken: string): string {
+    public static CreateAccessToken(user: User, refreshToken: JWTToken): JWTToken {
+
+        this.VerifyToken(user.bussinessId.value, refreshToken)
 
         const payload = {
-            sub: user.id,
+            sub: user.__id.value,
             name: user.name,
             exp: this.ExpireyForHour(1)
         }
@@ -39,14 +81,16 @@ export class AuthenticationService {
             alg: "sha256",
             typ: "JWT"
         }
-        const token = new JWTToken(header, payload)
+        const token = new JWTToken(RondomIdGenarator.CreateId(10), header, payload)
         this.__repo.add(token);
-        return token.signature;
+        return token;
+
 
     }
-    private static CreateRefrenceKeyForDay(user: User, packageType: PackageTypes, amount: number): ReferenceKey {
+    private static CreateRefreshToken(user: User, packageType: PackageTypes, amount: number): JWTToken {
 
         const countDay = (): number => {
+
             if (packageType == PackageTypes.Trial) {
                 return this.ExpireyForDay(amount)
             }
@@ -58,38 +102,44 @@ export class AuthenticationService {
             }
         }
         const payload = {
-            sub: user.id,
+
+            sub: user.bussinessId.value,
             name: user.name,
-            exp: countDay()
+            exp: countDay(),
+            pack: packageType
         }
         const header = {
             alg: "sha256",
             typ: "JWT"
         }
-        const token = new JWTToken(header, payload)
-        this.__repo.add(token);
-        return ReferenceKey.Create(user.bussinessId, packageType, amount)
+        const refreshToken = new JWTToken(user.tokenId, header, payload)
+        this.__repo.add(refreshToken);
+        return refreshToken
+
     }
 
 
 }
 export class JWTToken {
 
+    private __tokenId: string
+
     private __header: { "alg": string, "typ": string }
-    public get header() {
-        return this.__header;
-    }
+
     private __payload: { "sub": string, "name": string, "exp": number }
-    public get payload() {
-        return this.__payload;
-    }
+
     private __signature: string
+
+    public get tokenId() {
+        return this.__tokenId;
+    }
     public get signature() {
         return this.__signature;
     }
 
-    constructor(header: { "alg": string, "typ": string }, payload: { "sub": string, "name": string, "exp": number }) {
+    constructor(tokenId: string, header: { "alg": string, "typ": string }, payload: { "sub": string, "name": string, "exp": number }) {
 
+        this.__tokenId = tokenId;
         this.__header = header;
         this.__payload = payload;
         const base64Header = SecurityManager.base64UrlEncode(this.__header)

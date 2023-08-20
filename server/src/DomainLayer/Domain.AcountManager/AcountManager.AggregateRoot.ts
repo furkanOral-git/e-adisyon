@@ -12,7 +12,7 @@ export class Bussiness extends AggregateRoot<AcountManagerId, AcountManager> {
     public get name() {
         return this.__name;
     }
-
+    
 
     constructor(id: BussinessId, name: string) {
 
