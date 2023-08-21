@@ -29,7 +29,7 @@ export abstract class AggregateRoot<TId extends Id, TEntity extends IDomainEntit
     }
     getIndexOf(id: TId): number {
 
-        return this.__entities.findIndex(p => p.__id.IsEqualTo(id))
+        return this.__entities.findIndex(p => p.id.IsEqualTo(id))
     }
     removeFrom(id: TId): number {
 

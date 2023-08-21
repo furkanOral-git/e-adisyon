@@ -1,4 +1,4 @@
-import { IDbEntity } from "../Common/Common.Abstracts";
+import { IDbEntity, IDomainEntity } from "../Common/Common.Abstracts";
 import { Id, MenuId, TableLayoutId } from "../Common/Common.ValueObjects";
 
 
@@ -11,10 +11,12 @@ export class AcountManagerId extends Id {
 export class NullReferenceKey {
 
 }
-export class BussinessConfigFile implements IDbEntity {
+export class BussinessConfigFile implements IDomainEntity<BussinessId>, IDbEntity {
 
-    private __bussinessId: BussinessId
-    public get bussiness() {
+    
+    private __bussinessId: BussinessId;
+    
+    get id(): BussinessId {
         return this.__bussinessId;
     }
     private __tableLayoutId: TableLayoutId
@@ -32,6 +34,7 @@ export class BussinessConfigFile implements IDbEntity {
         this.__tableLayoutId = tableLayoutId;
         this.__menuId = menuId;
     }
+
     updateTableLayout(id: string) {
         this.__tableLayoutId.Update(id);
     }

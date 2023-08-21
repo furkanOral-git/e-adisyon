@@ -1,3 +1,5 @@
+import { IDomainEntity } from "../../DomainLayer/Common/Common.Abstracts";
+import { Id } from "../../DomainLayer/Common/Common.ValueObjects";
 import { LoginRequest, RegisterRequest } from "../../PresentationLayer/Requests";
 import { EmailHasBeenUsedAlready } from "../Errors";
 import { JWTRepository, UserRepository } from "../Repositories";
@@ -73,7 +75,7 @@ export class AuthenticationService {
         this.VerifyToken(user.bussinessId.value, refreshToken)
 
         const payload = {
-            sub: user.__id.value,
+            sub: user.id.value,
             name: user.name,
             exp: this.ExpireyForHour(1)
         }
@@ -120,9 +122,12 @@ export class AuthenticationService {
 
 
 }
-export class JWTToken {
+export class JWTTokenId extends Id {
 
-    private __tokenId: string
+}
+export class JWTToken implements IDomainEntity<JWTTokenId> {
+
+    private __tokenId: JWTTokenId
 
     private __header: { "alg": string, "typ": string }
 
@@ -130,7 +135,7 @@ export class JWTToken {
 
     private __signature: string
 
-    public get tokenId() {
+    get id(): JWTTokenId {
         return this.__tokenId;
     }
     public get signature() {
@@ -139,13 +144,14 @@ export class JWTToken {
 
     constructor(tokenId: string, header: { "alg": string, "typ": string }, payload: { "sub": string, "name": string, "exp": number }) {
 
-        this.__tokenId = tokenId;
+        this.__tokenId = new JWTTokenId(tokenId);
         this.__header = header;
         this.__payload = payload;
         const base64Header = SecurityManager.base64UrlEncode(this.__header)
         const base64Payload = SecurityManager.base64UrlEncode(this.__payload);
         this.__signature = SecurityManager.hashString(base64Header + "." + base64Payload + "." + process.env.AUTH__SECRET__KEY, header.alg)
     }
+
 }
 export enum PackageTypes {
     Trial = "TRIAL",

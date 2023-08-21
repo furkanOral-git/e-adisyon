@@ -3,7 +3,9 @@ import { Id } from "./Common.ValueObjects";
 
 export interface IDomainEntity<TId extends Id> {
 
-    __id: TId;
+    get id(): TId;
+    
+
 }
 
 export interface IDbEntity {

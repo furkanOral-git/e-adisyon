@@ -1,27 +1,74 @@
-import { IDbEntity } from "../DomainLayer/Common/Common.Abstracts"
+import { IDbEntity, IDomainEntity } from "../DomainLayer/Common/Common.Abstracts"
+import { Id, MenuId } from "../DomainLayer/Common/Common.ValueObjects"
 import { Bussiness } from "../DomainLayer/Domain.AcountManager/AcountManager.AggregateRoot"
 import { AcountManager } from "../DomainLayer/Domain.AcountManager/AcountManager.Entities"
-import { BussinessConfigFile } from "../DomainLayer/Domain.AcountManager/AcountManager.ValueObjects"
+import { AcountManagerId, BussinessConfigFile, BussinessId } from "../DomainLayer/Domain.AcountManager/AcountManager.ValueObjects"
 import { Menu } from "../DomainLayer/Domain.Product/Product.AggregateRoot"
-import { JWTToken } from "./services/Authentication"
+import { JWTToken, JWTTokenId } from "./services/Authentication"
 import { User } from "./services/Security"
 
-export interface IRepository<TEntity extends IDbEntity> {
+export interface IRepository<TId extends Id, TEntity extends IDomainEntity<TId>> {
 
     add(entity: TEntity): void
-    remove(id: string): void
+    remove(id: TId): void
     update(selection: (entity: TEntity) => boolean, newEntity: TEntity): void
     getBy(predicate: (entity: TEntity) => boolean): TEntity | null
     filter(predicate: (entity: TEntity) => boolean): TEntity[] | null
     some(predicate: (entity: TEntity) => boolean): boolean
 }
+abstract class InMemoryBaseRepository<TId extends Id, TEntity extends IDomainEntity<TId>> implements IRepository<TId, TEntity>{
 
-export class ConfigRepository implements IRepository<BussinessConfigFile>{
+    protected __enitities: TEntity[];
+
+    constructor() {
+
+        this.__enitities = []
+    }
+    add(entity: TEntity): void {
+        if (!this.__enitities.includes(entity)) {
+            this.__enitities.push(entity);
+            return;
+        }
+        console.log("Varlık zaten eklenmiş")
+    }
+    remove(id: TId): void {
+
+        const index = this.__enitities.findIndex(e => e.id.IsEqualTo(id))
+        if (index > -1) {
+            this.__enitities.splice(index, 1);
+            console.log("Kaldırıldı");
+            return;
+        }
+        console.log("Varlık bulunamadı")
+    }
+    update(selection: (entity: TEntity) => boolean, newEntity: TEntity): void {
+
+        const index = this.__enitities.findIndex(selection)
+        if (index > -1) {
+            this.__enitities.splice(index, 1, { ...newEntity })
+            console.log("Güncellendi")
+            return;
+        }
+        console.log("Varlık bulunamadı")
+    }
+    getBy(predicate: (entity: TEntity) => boolean): TEntity | null {
+        const result = this.__enitities.find(predicate)
+        return result ?? null
+    }
+    filter(predicate: (entity: TEntity) => boolean): TEntity[] | null {
+        const result = this.__enitities.filter(predicate);
+        return result.length > 0 ? result : null
+    }
+    some(predicate: (entity: TEntity) => boolean): boolean {
+        return this.__enitities.some(predicate);
+    }
+}
+export class ConfigRepository extends InMemoryBaseRepository<BussinessId, BussinessConfigFile> {
 
     private static __instance: ConfigRepository
 
     private constructor() {
-
+        super()
     }
 
     public static GetRepo(): ConfigRepository {
@@ -31,35 +78,17 @@ export class ConfigRepository implements IRepository<BussinessConfigFile>{
         }
         return this.__instance;
     }
-    add(entity: BussinessConfigFile): void {
-        throw new Error("Method not implemented.")
-    }
-    remove(id: string): void {
-        throw new Error("Method not implemented.")
-    }
-    update(selection: (entity: BussinessConfigFile) => boolean, newEntity: BussinessConfigFile): void {
-        throw new Error("Method not implemented.")
-    }
-    getAcountManagerBy(predicate: (a: AcountManager) => boolean): AcountManager {
-        throw new Error("Method not implemented.")
-    }
-    getBy(predicate: (entity: BussinessConfigFile) => boolean): BussinessConfigFile {
-        throw new Error("Method not implemented.")
-    }
-    filter(predicate: (entity: BussinessConfigFile) => boolean): BussinessConfigFile[] {
-        throw new Error("Method not implemented.")
-    }
-    some(predicate: (entity: BussinessConfigFile) => boolean): boolean {
-        throw new Error("Method not implemented.")
-    }
+
+
+
 
 
 }
-export class BussinessRepository implements IRepository<Bussiness>{
+export class BussinessRepository extends InMemoryBaseRepository<BussinessId, Bussiness> {
 
     private static __instance: BussinessRepository;
     private constructor() {
-
+        super()
     }
     static GetRepo(): BussinessRepository {
 
@@ -68,33 +97,25 @@ export class BussinessRepository implements IRepository<Bussiness>{
         }
         return this.__instance;
     }
+    getAcountManagerBy(id: BussinessId, predicate: (a: AcountManager) => boolean): AcountManager | null {
 
-    add(entity: Bussiness): void {
-        console.log("Eklendi")
+        const bussiness = this.__enitities.find(b => b.some(predicate))
+        if (!!bussiness) {
+
+            return bussiness.getBy(predicate) ?? null
+        }
+        console.log("Aradığınız yöneticiyi barındıran işletme bulunamadı")
+        return null
     }
-    remove(id: string): void {
-        throw new Error("Method not implemented.")
-    }
-    update(selection: (entity: Bussiness) => boolean, newEntity: Bussiness): void {
-        throw new Error("Method not implemented.")
-    }
-    getBy(predicate: (entity: Bussiness) => boolean): Bussiness | null {
-        throw new Error("Method not implemented.")
-    }
-    filter(predicate: (entity: Bussiness) => boolean): Bussiness[] | null {
-        throw new Error("Method not implemented.")
-    }
-    some(predicate: (entity: Bussiness) => boolean): boolean {
-        throw new Error("Method not implemented.")
-    }
+
 
 }
-export class JWTRepository implements IRepository<JWTToken>{
+export class JWTRepository extends InMemoryBaseRepository<JWTTokenId, JWTToken>{
 
     private static __instance: JWTRepository;
-    
-    private constructor() {
 
+    private constructor() {
+        super()
     }
     static GetRepo(): JWTRepository {
 
@@ -105,31 +126,14 @@ export class JWTRepository implements IRepository<JWTToken>{
         return this.__instance;
     }
 
-    add(entity: JWTToken): void {
-        throw new Error("Method not implemented.")
-    }
-    remove(id: string): void {
-        throw new Error("Method not implemented.")
-    }
-    update(selection: (entity: JWTToken) => boolean, newEntity: JWTToken): void {
-        throw new Error("Method not implemented.")
-    }
-    getBy(predicate: (entity: JWTToken) => boolean): JWTToken | null {
-        throw new Error("Method not implemented.")
-    }
-    filter(predicate: (entity: JWTToken) => boolean): JWTToken[] | null {
-        throw new Error("Method not implemented.")
-    }
-    some(predicate: (entity: JWTToken) => boolean): boolean {
-        throw new Error("Method not implemented.")
-    }
+
 
 }
-export class MenuRepository implements IRepository<Menu>{
+export class MenuRepository extends InMemoryBaseRepository<MenuId, Menu>{
 
     private static __instance: MenuRepository
     private constructor() {
-
+        super()
     }
     static GetRepo() {
 
@@ -139,33 +143,16 @@ export class MenuRepository implements IRepository<Menu>{
         }
         return this.__instance;
     }
-    add(entity: Menu): void {
-        throw new Error("Method not implemented.")
-    }
-    remove(id: string): void {
-        throw new Error("Method not implemented.")
-    }
-    update(selection: (entity: Menu) => boolean, newEntity: Menu): void {
-        throw new Error("Method not implemented.")
-    }
-    getBy(predicate: (entity: Menu) => boolean): Menu | null {
-        throw new Error("Method not implemented.")
-    }
-    filter(predicate: (entity: Menu) => boolean): Menu[] | null {
-        throw new Error("Method not implemented.")
-    }
-    some(predicate: (entity: Menu) => boolean): boolean {
-        throw new Error("Method not implemented.")
-    }
+
 
 }
-export class UserRepository implements IRepository<User> {
+export class UserRepository extends InMemoryBaseRepository<AcountManagerId, User> {
 
 
     private static __instance: UserRepository;
 
     private constructor() {
-
+        super()
     }
 
     public static GetRepo() {
@@ -176,23 +163,6 @@ export class UserRepository implements IRepository<User> {
         return this.__instance;
     }
 
-    some(predicate: (entity: User) => boolean): boolean {
-        throw new Error("Method not implemented.")
-    }
-    add(entity: User): void {
-        throw new Error("Method not implemented.")
-    }
-    remove(id: string): void {
-        throw new Error("Method not implemented.")
-    }
-    update(selection: (entity: User) => boolean, newEntity: User): void {
-        throw new Error("Method not implemented.")
-    }
-    getBy(predicate: (entity: User) => boolean): User | null {
-        throw new Error("Method not implemented.")
-    }
-    filter(predicate: (entity: User) => boolean): User[] | null {
-        throw new Error("Method not implemented.")
-    }
+
 
 }

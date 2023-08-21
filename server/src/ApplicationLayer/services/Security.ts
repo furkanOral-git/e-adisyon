@@ -1,14 +1,11 @@
 import { IDomainEntity } from "../../DomainLayer/Common/Common.Abstracts";
 import { AcountManagerId, BussinessId } from "../../DomainLayer/Domain.AcountManager/AcountManager.ValueObjects";
-import { AccessPermissionRequest } from "../../PresentationLayer/Requests";
-import { ResponseState } from "../Responses";
-import { RondomIdGenarator } from "../Tools";
 import crypto from 'crypto';
 
 
 export class User implements IDomainEntity<AcountManagerId>{
 
-    __id: AcountManagerId
+    private __id: AcountManagerId
     private __bussinessId: BussinessId
     private __name: string
     private __surname: string
@@ -16,7 +13,9 @@ export class User implements IDomainEntity<AcountManagerId>{
     private __password: string
     private __tokenId: string
 
-
+    get id(): AcountManagerId {
+        return this.__id;
+    }
     public get tokenId() {
         return this.__tokenId;
     }
@@ -42,6 +41,7 @@ export class User implements IDomainEntity<AcountManagerId>{
         this.__name = name;
         this.__surname = surname;
     }
+
 }
 
 export class SecurityManager {
