@@ -1,25 +1,23 @@
-import { IValueObject } from "../Common/Common.Abstracts";
-import { Id } from "../Common/Common.ValueObjects";
+import { BaseValueObject, IValueObject } from "../Common/Common.Abstracts";
 
-export class ProductCategory implements IValueObject {
+export class ProductCategory extends BaseValueObject<string, ProductCategory> implements IValueObject {
 
-    private __categoryName: string
+
     private __categoryStatus: boolean
 
     constructor(categoryName: string, categoryStatus: boolean) {
 
-        this.__categoryName = categoryName;
+        super(categoryName)
         this.__categoryStatus = categoryStatus;
     }
-    updateCategoryName(categoryName: string) {
-
-        this.__categoryName = categoryName;
-    }
-}
-export class ProductId extends Id{
 
 }
+export class ProductId extends BaseValueObject<string, ProductId> implements IValueObject {
+    
+}
+export class MenuId extends BaseValueObject<string, MenuId> implements IValueObject {
 
+}
 export enum ProductStatus {
     ReadyForOrder,
     CanNotReadyForOrder,

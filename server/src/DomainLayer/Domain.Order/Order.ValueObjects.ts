@@ -1,24 +1,20 @@
-import { IValueObject } from "../Common/Common.Abstracts"
-import { Id } from "../Common/Common.ValueObjects"
+import { BaseValueObject, IValueObject } from "../Common/Common.Abstracts"
 
-export class TableId extends Id {
-
-}
-export class OrderId extends Id {
+export class TableId extends BaseValueObject<string, TableId> implements IValueObject {
 
 }
-export class OrderItemId extends Id {
+export class OrderId extends BaseValueObject<string, OrderId> implements IValueObject {
+
+}
+export class OrderItemId extends BaseValueObject<string, OrderItemId> implements IValueObject {
 
 }
 
 
-
-export class TableNumber implements IValueObject {
-
-    private __value: number
+export class TableNumber extends BaseValueObject<number, TableNumber> implements IValueObject {
 
     constructor(value: number) {
-        this.__value = value
+        super(value)
     }
 
 }

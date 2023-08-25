@@ -1,17 +1,22 @@
-import { IDomainEntity } from "../../DomainLayer/Common/Common.Abstracts"
-import { Id } from "../../DomainLayer/Common/Common.ValueObjects"
-import { AcountManagerId } from "../../DomainLayer/Domain.AcountManager/AcountManager.ValueObjects"
-import { AccessPermissionRequest, LoginRequest, RegisterRequest, RequestState, WaitedPermissionRequest } from "../../PresentationLayer/Requests"
+import { BaseValueObject, IDomainEntity } from "../../DomainLayer/Common/Common.Abstracts"
+import { IONameSpace } from "../../DomainLayer/Common/Common.ValueObjects"
+import { Bussiness } from "../../DomainLayer/Domain.AcountManager/AcountManager.AggregateRoot"
+import { TableLayout, TableLayoutOption } from "../../DomainLayer/Domain.Order/Order.AggregateRoot"
+import { Menu } from "../../DomainLayer/Domain.Product/Product.AggregateRoot"
+import { MenuId } from "../../DomainLayer/Domain.Product/Product.ValueObjects"
+import { IOServer, Room } from "../../DomainLayer/Domain.Room/Room.AggregateRoot"
+import { ParticipantClientModel, Participant } from "../../DomainLayer/Domain.Room/Room.Entities"
+import { ParticipantId, RoomId } from "../../DomainLayer/Domain.Room/Room.ValueObjects"
+import { LoginRequest, RegisterRequest} from "../../PresentationLayer/Requests"
 import { EmailHasBeenUsedAlready, EmailHasNotFound, WrongPasswordEntered } from "../Errors"
-import { UserRepository } from "../Repositories"
-import { PermissionResult } from "../Responses"
-
+import { UserRepository, MenuRepository, RoomConfigRepository } from "../Repositories"
 import { RondomIdGenarator } from "../Tools"
+import { RoomContext } from "../room/RoomContext"
 import { SecurityManager, User } from "./Security"
 
 
 
-export interface IAdvancedService<TId extends Id, TEntity extends IDomainEntity<TId>> extends IReadOnlyService<TId, TEntity> {
+export interface IAdvancedService<TId extends BaseValueObject<string, TId>, TEntity extends IDomainEntity<TId>> extends IReadOnlyService<TId, TEntity> {
 
     RemoveBy(predicate: (entity: TEntity) => boolean): void
     AddTo(entity: TEntity): void
@@ -19,14 +24,13 @@ export interface IAdvancedService<TId extends Id, TEntity extends IDomainEntity<
     Update(id: TId, newEntity: TEntity): void
 
 }
-export interface IReadOnlyService<TId extends Id, TEntity extends IDomainEntity<TId>> {
+export interface IReadOnlyService<TId extends BaseValueObject<string, TId>, TEntity extends IDomainEntity<TId>> {
 
     GetBy(predicate: (entity: TEntity) => boolean): TEntity | null
     Some(predicate: (entity: TEntity) => boolean): boolean
-    Includes(entity: TEntity): boolean;
     GetAllBy(predicate: (entity: TEntity) => boolean): TEntity[]
 }
-export class UserService implements IReadOnlyService<AcountManagerId, User>{
+export class UserService {
 
     private __repo: UserRepository;
     private static __instance: UserService;
@@ -43,17 +47,14 @@ export class UserService implements IReadOnlyService<AcountManagerId, User>{
         }
         return this.__instance;
     }
-    GetBy(predicate: (entity: User) => boolean): User | null {
-        throw new Error("Method not implemented.")
+    private GetBy(predicate: (entity: User) => boolean): User | null {
+        return this.__repo.getBy(predicate) ?? null
     }
-    Some(predicate: (entity: User) => boolean): boolean {
-        throw new Error("Method not implemented.")
+    private Some(predicate: (entity: User) => boolean): boolean {
+        return this.__repo.some(predicate);
     }
-    Includes(entity: User): boolean {
-        throw new Error("Method not implemented.")
-    }
-    GetAllBy(predicate: (entity: User) => boolean): User[] {
-        throw new Error("Method not implemented.")
+    private GetAllBy(predicate: (entity: User) => boolean): User[] {
+        return this.__repo.filter(predicate) ?? null;
     }
     Register(req: RegisterRequest): User {
 
@@ -79,6 +80,7 @@ export class UserService implements IReadOnlyService<AcountManagerId, User>{
         return user;
     }
     Login(request: LoginRequest): User {
+
         const user = this.__repo.getBy(e => e.email == request.email);
         if (!!user) {
             const password = request.password
@@ -107,97 +109,94 @@ export class UserService implements IReadOnlyService<AcountManagerId, User>{
 
 
 
-export class AccessPermissionRequestManager {
 
-    private static __requests: { [requestId: string]: WaitedPermissionRequest } = {}
-    private static __responses: { [requestId: string]: PermissionResult } = {}
 
-    public static get WaitedRequests() {
-        return this.__requests;
+export class AppContextManagementService {
+
+    private static __instance: AppContextManagementService
+    private __contexts: { [bussinessId: string]: RoomContext }
+    private __ioServer: IOServer
+    private __configRepo: RoomConfigRepository
+    private __menuRepository: MenuRepository
+    
+
+    private constructor(ioServer: IOServer) {
+
+        this.__contexts = {}
+        this.__ioServer = ioServer;
+        this.__configRepo = RoomConfigRepository.GetRepo();
+        this.__menuRepository = MenuRepository.GetRepo();
     }
-    private static IsExistRequestAlready(request: AccessPermissionRequest): boolean {
-        const requests = Object.values(this.__requests)
-        return requests.some(req => req.email == req.email && req.customerName == request.customerName && req.customerSurname == request.customerSurname)
+    public static GetService(ioServer: IOServer) {
+
+        if (!this.__instance) {
+            this.__instance = new AppContextManagementService(ioServer);
+        }
+        return this.__instance;
     }
-    static VerifyResponseAndClearIfExist(id: string) {
+    private AddContext(context: RoomContext) {
 
-        if (Object.keys(this.__responses).includes(id)) {
+        this.__contexts[context.bussinessId.value] = context
 
-            delete this.__responses[id]
-            return true;
+    }
+    private RemoveContext(context: RoomContext) {
+        delete this.__contexts[context.bussinessId.value]
+        context.Disconnect();
+        context.Deconstruct();
+    }
+    GetAppContext(bussiness: Bussiness): RoomContext {
+
+        if (Object.keys(this.__contexts).includes(bussiness.id.value)) {
+            return this.__contexts[bussiness.id.value]
+        }
+        return this.CreateAppContext(bussiness);
+
+    }
+    private CreateAppContext(bussiness: Bussiness): RoomContext {
+
+        let menu: Menu | null
+        let layout: TableLayout;
+        let room: Room | undefined
+        let context: RoomContext
+
+
+        const config = this.__configRepo.getBy(c => c.id.IsEqualTo(bussiness.id))
+        const nameSpace = new IONameSpace(bussiness.id.value);
+
+        if (!!config) {
+
+            menu = this.__menuRepository.getBy(p => p.id.IsEqualTo(config.menuId));
+            room = this.__ioServer.getBy(r => r.id.IsEqualTo(config.roomId))
+            layout = new TableLayout(config.tableLayoutOption)
+
+            if (!room) {
+                room = new Room(config.roomId, nameSpace);
+            }
+            if (!menu) {
+                menu = new Menu(config.menuId);
+            }
+
+
         }
         else {
-            return false;
-        }
-    }
-    private static AcceptionById(id: string) {
-        const waitedRequest = this.__requests[id]
-        this.__responses[id] = waitedRequest.Accept()
-        delete this.__requests[id]
-    }
-    private static Acception(waitedRequest: WaitedPermissionRequest) {
 
-        this.__responses[waitedRequest.requestId] = waitedRequest.Accept()
-        delete this.__requests[waitedRequest.requestId]
-    }
-    private static AddRequestToLine(waitedRequest: WaitedPermissionRequest) {
-        this.__requests[waitedRequest.requestId] = waitedRequest;
-    }
-    private static RejectionById(id: string) {
-
-        const waitedRequest = this.__requests[id]
-        this.__responses[id] = waitedRequest.Reject();
-        delete this.__requests[id]
-    }
-    static async SendRequestAndWaitForRepsonseAsync(request: AccessPermissionRequest): Promise<PermissionResult> {
-
-        return new Promise<PermissionResult>((resolve, reject) => {
-
-            if (this.IsExistRequestAlready(request)) {
-                reject("Zaten şuanda bir İstek oluşturulmuş!")
+            const option: TableLayoutOption = {
+                amount: 0,
+                indexTableNumber: 0
             }
-            const id = RondomIdGenarator.CreateId(7)
-            const waitedRequest = new WaitedPermissionRequest(request.subscribeType,
-                request.timeAmount,
-                request.customerName,
-                request.customerSurname,
-                request.bussinessName,
-                request.email,
-                id);
-            this.AddRequestToLine(waitedRequest);
-            /////test için
-            this.Acception(waitedRequest)
-            resolve(this.__responses[id])
-            ////////
-            this.__requests[id] = waitedRequest;
-            let intervalCount = 0;
-            const intervalId = setInterval(() => {
+            layout = new TableLayout(option)
+            const roomIdValue = RondomIdGenarator.CreateId(30)
+            menu = new Menu(new MenuId(RondomIdGenarator.CreateId(5)))
+            room = new Room(new RoomId(roomIdValue), nameSpace)
 
-                if (intervalCount == 9) {
+        }
 
-                    this.__responses[id] = waitedRequest.Timeout()
-                    delete this.__requests[id]
-                    clearInterval(intervalId)
-                    reject(this.__responses[id])
-                }
-                if (waitedRequest.state == RequestState.Answered) {
-
-                    delete this.__requests[id]
-                    clearInterval(intervalId)
-
-                    if (this.__responses[id].result) {
-                        resolve(this.__responses[id])
-                    }
-                    else {
-                        reject(this.__responses[id])
-                    }
-                }
-                intervalCount++
-            }, 6000)
-
-
-        })
-
+        const model = new ParticipantClientModel(bussiness.getFirst().name, nameSpace);
+        const builderParticipant = new Participant(new ParticipantId(RondomIdGenarator.CreateId(15)), model);
+        room.AddParticipant(builderParticipant);
+        context = new RoomContext(menu, layout, room, bussiness, this.__ioServer)
+        this.AddContext(context)
+        return context
     }
 
 }

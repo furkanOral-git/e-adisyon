@@ -1,5 +1,6 @@
 import { AcceptedPermissionResponse, AcceptedPermissionResult, RejectedPermissionResult, TimeoutPermissionResult } from "../ApplicationLayer/Responses";
 import { SucceedAuthenticationResponse, PackageTypes } from "../ApplicationLayer/services/Authentication";
+import { BussinessId } from "../DomainLayer/Domain.AcountManager/AcountManager.ValueObjects";
 
 
 export abstract class BaseRequest {
@@ -9,10 +10,50 @@ export abstract class BaseRequest {
 }
 export class GetSocketConnectionRequest extends BaseRequest {
 
-
-
-    constructor(res: SucceedAuthenticationResponse) {
+    private __res: SucceedAuthenticationResponse
+    private __bussinessId: BussinessId
+    
+    public get bussinessId() {
+        return this.__bussinessId
+    }
+    public get auth() {
+        return this.__res;
+    }
+    constructor(res: SucceedAuthenticationResponse, bussinessId: BussinessId) {
         super()
+        this.__res = res;
+        this.__bussinessId = bussinessId;
+    }
+}
+export class EmploeeSocketConnectionRequest extends BaseRequest {
+
+    private __name: string
+    private __surname: string
+    private __employeeType: string
+    private __participantId: string | undefined
+
+
+    public get participantId() {
+
+        return this.__participantId;
+
+    }
+    public get name() {
+        return this.__name;
+    }
+    public get surname() {
+        return this.__surname;
+    }
+    public get employeeType() {
+        return this.__employeeType;
+    }
+    constructor(participantId: string, name: string, surname: string, employeeType: string) {
+
+        super()
+        this.__participantId = participantId;
+        this.__name = name;
+        this.__surname = surname;
+        this.__employeeType = employeeType;
     }
 }
 export class LoginRequest extends BaseRequest {

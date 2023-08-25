@@ -1,38 +1,77 @@
 import { Socket } from "socket.io"
 import { IDomainEntity } from "../Common/Common.Abstracts"
-import { Room } from "./Room.AggregateRoot"
-import { EventType, ParticipantId } from "./Room.ValueObjects"
+import { ParticipantId } from "./Room.ValueObjects"
+import { IOClientInterface } from "./Room.Abstracts";
+import { IONameSpace } from "../Common/Common.ValueObjects";
 
-export class Participant implements IDomainEntity<ParticipantId> {
+export class Participant implements IDomainEntity<ParticipantId>, IOClientInterface {
 
-    __id: ParticipantId
+    private __socket: Socket | null;
+    private __id: ParticipantId
+    private __properties: ParticipantClientModel
+    public listeners: { [event: string]: (data: any) => void };
     
-    public __socket: Socket | null
+    get properties() {
+        return this.__properties
+    }
+    get id(): ParticipantId {
+        return this.__id;
+    }
+    
+    constructor(id: ParticipantId, properties: ParticipantClientModel) {
 
-
-    constructor(socket: Socket, id: ParticipantId) {
-
-        this.__socket = socket
         this.__id = id
+        this.__properties = properties;
+        this.listeners = {}
+        this.__socket = null;
+    }
+
+    connect(connectionSentence: (url: string) => void) {
+        connectionSentence(this.__properties.url)
+    }
+
+    sendData(event: string, data: any) {
+
+        this.__socket?.emit(event, data)
+    }
+    listen(event: string, listener: (data: any) => void) {
+
+        this.__socket?.on(event, listener)
+        this.listeners[event] = listener
+    }
+    off(event: string): void {
+
+        this.__socket?.off(event, this.listeners[event])
+        delete this.listeners[event]
+    }
+    disconnect() {
+
+        if (!!this.__socket) {
+
+            this.__socket.disconnect();
+        }
     }
 
 
-    private JoinToRoom(room: Room) {
+}
+export class ParticipantClientModel {
 
-        this.__socket?.join(`${room.__id}.${EventType.Notification}`)
-        this.__socket?.join(`${room.__id}.${EventType.Data}`)
-        this.addDisconnectHandler(room)
-        room.addTo(this)
+    private __name: string
+    private __url: string
+
+    public get url() {
+        return this.__url;
     }
+    public get name() {
+        return this.__name;
+    }
+    public listeners: { [event: string]: (data: any) => void };
 
-    private addDisconnectHandler(room: Room) {
+    constructor(name: string, nameSpace: IONameSpace) {
 
-        this.__socket?.on("disconnect", () => {
-
-            this.__socket?.leave(`${room.__id}.${EventType.Notification}`)
-            this.__socket?.leave(`${room.__id}.${EventType.Data}`)
-            this.__socket = null;
-        })
+        this.listeners = {}
+        this.__name = name;
+        this.__url = process.env.API + "/" + nameSpace.value
     }
 
 

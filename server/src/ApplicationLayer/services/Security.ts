@@ -1,6 +1,9 @@
 import { IDomainEntity } from "../../DomainLayer/Common/Common.Abstracts";
 import { AcountManagerId, BussinessId } from "../../DomainLayer/Domain.AcountManager/AcountManager.ValueObjects";
 import crypto from 'crypto';
+import { WaitedPermissionRequest, AccessPermissionRequest, RequestState } from "../../PresentationLayer/Requests";
+import { PermissionResult } from "../Responses";
+import { RondomIdGenarator } from "../Tools";
 
 
 export class User implements IDomainEntity<AcountManagerId>{
@@ -74,6 +77,100 @@ export class SecurityManager {
         const hash = this.hashPassword(password);
         return hashedPassword == hash
     }
+}
+export class AccessPermissionRequestManager {
+
+    private static __requests: { [requestId: string]: WaitedPermissionRequest } = {}
+    private static __responses: { [requestId: string]: PermissionResult } = {}
+
+    public static get WaitedRequests() {
+        return this.__requests;
+    }
+    private static IsExistRequestAlready(request: AccessPermissionRequest): boolean {
+        const requests = Object.values(this.__requests)
+        return requests.some(req => req.email == req.email && req.customerName == request.customerName && req.customerSurname == request.customerSurname)
+    }
+    static VerifyResponseAndClearIfExist(id: string) {
+
+        if (Object.keys(this.__responses).includes(id)) {
+
+            delete this.__responses[id]
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    private static AcceptionById(id: string) {
+        const waitedRequest = this.__requests[id]
+        this.__responses[id] = waitedRequest.Accept()
+        delete this.__requests[id]
+    }
+    private static Acception(waitedRequest: WaitedPermissionRequest) {
+
+        this.__responses[waitedRequest.requestId] = waitedRequest.Accept()
+        delete this.__requests[waitedRequest.requestId]
+    }
+    private static AddRequestToLine(waitedRequest: WaitedPermissionRequest) {
+        this.__requests[waitedRequest.requestId] = waitedRequest;
+    }
+    private static RejectionById(id: string) {
+
+        const waitedRequest = this.__requests[id]
+        this.__responses[id] = waitedRequest.Reject();
+        delete this.__requests[id]
+    }
+    static async SendRequestAndWaitForRepsonseAsync(request: AccessPermissionRequest): Promise<PermissionResult> {
+
+        return new Promise<PermissionResult>((resolve, reject) => {
+
+            if (this.IsExistRequestAlready(request)) {
+                reject("Zaten şuanda bir İstek oluşturulmuş!")
+            }
+            const id = RondomIdGenarator.CreateId(7)
+            const waitedRequest = new WaitedPermissionRequest(request.subscribeType,
+                request.timeAmount,
+                request.customerName,
+                request.customerSurname,
+                request.bussinessName,
+                request.email,
+                id);
+            this.AddRequestToLine(waitedRequest);
+            /////test için
+            this.Acception(waitedRequest)
+            resolve(this.__responses[id])
+            ////////
+            this.__requests[id] = waitedRequest;
+            let intervalCount = 0;
+            const intervalId = setInterval(() => {
+
+                if (intervalCount == 9) {
+
+                    this.__responses[id] = waitedRequest.Timeout()
+                    delete this.__requests[id]
+                    clearInterval(intervalId)
+                    reject(this.__responses[id])
+                }
+                if (waitedRequest.state == RequestState.Answered) {
+
+                    delete this.__requests[id]
+                    clearInterval(intervalId)
+
+                    if (this.__responses[id].result) {
+                        resolve(this.__responses[id])
+                    }
+                    else {
+                        reject(this.__responses[id])
+                    }
+                }
+                intervalCount++
+            }, 6000)
+
+
+        })
+
+    }
+
 }
 
 

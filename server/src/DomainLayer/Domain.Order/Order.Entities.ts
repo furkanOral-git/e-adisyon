@@ -6,7 +6,7 @@ import { OrderItemId, TableId, TableNumber, TableState } from "./Order.ValueObje
 
 export class OrderItem implements IDomainEntity<OrderItemId> {
 
-    __id: OrderItemId
+    private __id: OrderItemId
     __amount: number
     
     constructor(id: OrderItemId, amount: number) {
@@ -14,16 +14,20 @@ export class OrderItem implements IDomainEntity<OrderItemId> {
         this.__id = id;
         this.__amount = amount;
     }
+    get id(): OrderItemId {
+        return this.__id;
+    }
 }
 export class TableWaitingForOrder extends Table implements IDomainEntity<TableId> {
 
     private __waitedOrder: Order
-
+    
     constructor(id: TableId, tableNumber: TableNumber, waitedOrder: Order) {
 
         super(id, tableNumber, TableState.WaitingForOrder);
         this.__waitedOrder = waitedOrder;
     }
+    
 }
 export class TableFull extends Table implements IDomainEntity<TableId> {
 

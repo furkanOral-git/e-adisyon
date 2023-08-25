@@ -1,8 +1,7 @@
-import { IDomainEntity } from "./Common.Abstracts";
-import { Id } from "./Common.ValueObjects";
+import { BaseValueObject, IDomainEntity } from "./Common.Abstracts";
 
 
-export abstract class AggregateRoot<TId extends Id, TEntity extends IDomainEntity<TId>>{
+export abstract class AggregateRoot<TId extends BaseValueObject<string, TId>, TEntity extends IDomainEntity<TId>>{
 
     protected __entities: TEntity[];
 
@@ -10,7 +9,7 @@ export abstract class AggregateRoot<TId extends Id, TEntity extends IDomainEntit
         this.__entities = [];
     }
 
-    addTo(entity: TEntity) {
+    protected addTo(entity: TEntity) {
 
         if (!this.__entities.includes(entity)) {
             this.__entities.push(entity);
@@ -18,6 +17,9 @@ export abstract class AggregateRoot<TId extends Id, TEntity extends IDomainEntit
     }
     some(predicate: (e: TEntity) => boolean): boolean {
         return this.__entities.some(predicate)
+    }
+    Includes(entity: TEntity) {
+        return this.__entities.includes(entity);
     }
     getAllBy(predicate: (entity: TEntity) => boolean): TEntity[] {
 
@@ -27,21 +29,27 @@ export abstract class AggregateRoot<TId extends Id, TEntity extends IDomainEntit
 
         return this.__entities.find(predicate)
     }
-    getIndexOf(id: TId): number {
+    getFirst() {
+        return this.__entities[0]
+    }
+    getLast() {
+        return this.__entities[this.__entities.length - 1]
+    }
+    protected getIndexOf(id: TId): number {
 
         return this.__entities.findIndex(p => p.id.IsEqualTo(id))
     }
-    removeFrom(id: TId): number {
+    protected removeFrom(id: TId): number {
 
         const index = this.getIndexOf(id)
         this.__entities.splice(index, 1);
         return index
     }
-    updateAll(newEntities: TEntity[]) {
+    protected updateAll(newEntities: TEntity[]) {
 
         this.__entities = newEntities;
     }
-    updateEntityByIndex(index: number, newEntity: TEntity) {
+    protected updateEntityByIndex(index: number, newEntity: TEntity) {
 
         this.__entities[index] = newEntity
     }

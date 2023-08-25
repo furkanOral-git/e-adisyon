@@ -1,4 +1,4 @@
-import { IEntityId, IValueObject } from "./Common.Abstracts";
+import { BaseValueObject, IValueObject } from "./Common.Abstracts";
 
 export class Bill implements IValueObject {
 
@@ -10,30 +10,29 @@ export class Bill implements IValueObject {
 
     }
 }
-export abstract class Id implements IEntityId {
-
-    private __value: string
-    public get value() {
-        return this.__value;
-    }
+export class IONameSpace extends BaseValueObject<string, IONameSpace>{
 
     constructor(value: string) {
-        this.__value = value;
-
-    }
-    Update(newValue: string) {
-        this.__value = newValue;
-    }
-    IsEqualTo<T extends Id>(id: T): boolean {
-        return id.__value == this.__value ? true : false
+        super(value);
     }
 
 }
-export class TableLayoutId extends Id {
-}
-export class MenuId extends Id {
-}
-export class Money implements IValueObject {
+
+export class Money extends BaseValueObject<number, Money> implements IValueObject {
+
+    constructor(value: number) {
+        super(value);
+    }
+
+    IsLessThan(right: Money): boolean {
+        return this.value < right.value;
+    }
+    IsGreaterThan(right: Money) {
+        return this.value > right.value
+    }
+
+
+
 
 }
 

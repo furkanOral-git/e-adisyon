@@ -2,7 +2,7 @@ import express from "express";
 import { Server } from "socket.io";
 import { createServer } from "http"
 import { exceptionMiddleware } from "./middleware";
-import { AddAccessPermissionRequestController, AddLoginRequestController, AddRegisterRequestController, AddSocketConnectionRequestController, accessPermissionRequestController, loginRequestController, registerRequestController, socketConnectionRequestController } from "./PresentationLayer/Controllers";
+import { AddAccessPermissionRequestController, AddLoginRequestController, AddRegisterRequestController, AddSocketConnectionRequestController, AddSocketConnectionWithUrlRequestController, accessPermissionRequestController, loginRequestController, registerRequestController, socketConnectionRequestController, socketConnectionWithUrlRequestController } from "./PresentationLayer/Controllers";
 import { IOServer } from "./DomainLayer/Domain.Room/Room.AggregateRoot";
 
 export default class ServerManagement {
@@ -14,12 +14,17 @@ export default class ServerManagement {
 
         const app = express()
         const httpServer = createServer(app);
+
         app.use(exceptionMiddleware)
+
         app.use("/register", registerRequestController)
         app.use("/login", loginRequestController)
         app.use("/permission", accessPermissionRequestController)
         app.use("/connection", socketConnectionRequestController)
-        ServerManagement.__ = new IOServer(new Server(httpServer, {
+        app.use("/room", socketConnectionWithUrlRequestController)
+
+        ServerManagement.__ = IOServer.GetServer(new Server(httpServer, {
+
             cors: {
                 origin: "*",
                 methods: ["POST", "GET"]
@@ -32,10 +37,11 @@ export default class ServerManagement {
 
     private static AddControllers() {
 
-        AddAccessPermissionRequestController(this.__);
-        AddLoginRequestController(this.__);
-        AddRegisterRequestController(this.__);
+        AddAccessPermissionRequestController();
+        AddLoginRequestController();
+        AddRegisterRequestController();
         AddSocketConnectionRequestController(this.__);
+        AddSocketConnectionWithUrlRequestController();
     }
 
 

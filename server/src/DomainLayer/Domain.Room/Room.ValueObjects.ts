@@ -1,13 +1,16 @@
-import { Id } from "../Common/Common.ValueObjects";
+import { BaseValueObject, IValueObject } from "../Common/Common.Abstracts";
 
-export class RoomId extends Id {
+
+
+export class ParticipantId extends BaseValueObject<string, ParticipantId> implements IValueObject {
 
 }
-export class ParticipantId extends Id {
+export class RoomId extends BaseValueObject<string, RoomId> implements IValueObject {
 
 }
-export enum EventType{
+export enum EventType {
     Data,
     Notification
 }
+
 

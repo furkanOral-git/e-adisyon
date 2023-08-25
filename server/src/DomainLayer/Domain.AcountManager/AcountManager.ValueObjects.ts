@@ -1,44 +1,10 @@
-import { IDbEntity, IDomainEntity } from "../Common/Common.Abstracts";
-import { Id, MenuId, TableLayoutId } from "../Common/Common.ValueObjects";
+import { BaseValueObject, IValueObject } from "../Common/Common.Abstracts";
 
 
-export class BussinessId extends Id {
-
-}
-export class AcountManagerId extends Id {
+export class BussinessId extends BaseValueObject<string, BussinessId> implements IValueObject {
 
 }
-export class NullReferenceKey {
+export class AcountManagerId extends BaseValueObject<string, AcountManagerId> implements IValueObject {
 
 }
-export class BussinessConfigFile implements IDomainEntity<BussinessId>, IDbEntity {
 
-    
-    private __bussinessId: BussinessId;
-    
-    get id(): BussinessId {
-        return this.__bussinessId;
-    }
-    private __tableLayoutId: TableLayoutId
-    public get tableLayoutId() {
-        return this.__tableLayoutId;
-    }
-    private __menuId: MenuId
-    public get menuId() {
-        return this.__menuId;
-    }
-
-    constructor(bussinessId: BussinessId, tableLayoutId: TableLayoutId, menuId: MenuId) {
-
-        this.__bussinessId = bussinessId
-        this.__tableLayoutId = tableLayoutId;
-        this.__menuId = menuId;
-    }
-
-    updateTableLayout(id: string) {
-        this.__tableLayoutId.Update(id);
-    }
-    updateMenu(id: string) {
-        this.__menuId.Update(id);
-    }
-}

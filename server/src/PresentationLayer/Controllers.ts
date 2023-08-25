@@ -1,62 +1,65 @@
 import { Router } from "express";
-import { AccessPermissionRequest, BaseRequest, GetSocketConnectionRequest, LoginRequest, RegisterRequest } from "./Requests";
+import { AccessPermissionRequest, BaseRequest, EmploeeSocketConnectionRequest, GetSocketConnectionRequest, LoginRequest, RegisterRequest } from "./Requests";
 import { IOServer } from "../DomainLayer/Domain.Room/Room.AggregateRoot";
 import { WorkflowFunctions } from "../ApplicationLayer/Workflows";
 import { AccessPermissionRequestManager } from "../ApplicationLayer/services/Services";
 
+
 export const registerRequestController = Router()
 export const loginRequestController = Router()
 export const socketConnectionRequestController = Router()
+export const socketConnectionWithUrlRequestController = Router()
 export const accessPermissionRequestController = Router()
 //2
-export function AddRegisterRequestController(server: IOServer) {
+export function AddRegisterRequestController() {
 
     registerRequestController.post("/:id", (req, res) => {
 
-        const id = req.params.id
-        if (!AccessPermissionRequestManager.VerifyResponseAndClearIfExist(id)) {
-            res.status(400).json("Geçersiz istek")
-        }
-        else {
-            processRequest<RegisterRequest>(WorkflowFunctions.RegisterRequestWorkflowAsync, req, res, server);
-        }
+        processRequest<RegisterRequest>(WorkflowFunctions.RegisterRequestWorkflowAsync, req, res, req.params.id);
+
     })
 }
-export function AddLoginRequestController(server: IOServer) {
+export function AddLoginRequestController() {
+
     loginRequestController.post("/", (req, res) => {
 
-        processRequest<LoginRequest>(WorkflowFunctions.LoginRequestWorkflowAsync, req, res, server)
+        processRequest<LoginRequest>(WorkflowFunctions.LoginRequestWorkflowAsync, req, res, undefined)
 
     })
 }
 //3
-export function AddSocketConnectionRequestController(server: IOServer) {
+export function AddSocketConnectionRequestController(ioServer: IOServer) {
 
 
-    socketConnectionRequestController.post("/:token", (req, res) => {
+    socketConnectionRequestController.post("/", (req, res) => {
 
-        const accessToken = req.params.token
-        console.log(accessToken)
-        processRequest<GetSocketConnectionRequest>(WorkflowFunctions.GetSocketConnectionWorkFlow, req, res, server)
+        processRequest<GetSocketConnectionRequest>(WorkflowFunctions.CreateAppContextRequestWorkFlow, req, res, ioServer)
     })
 
 }
+export function AddSocketConnectionWithUrlRequestController() {
+
+    socketConnectionWithUrlRequestController.post("/:roomId", (req, res) => {
+
+        processRequest<EmploeeSocketConnectionRequest>(WorkflowFunctions.JoinToAppContextRequestWorkFlow, req, res, req.params.roomId)
+    })
+}
 //1
 
-export function AddAccessPermissionRequestController(server: IOServer) {
+export function AddAccessPermissionRequestController() {
 
 
     accessPermissionRequestController.post("/", (req, res) => {
 
-        processRequest<AccessPermissionRequest>(WorkflowFunctions.GetAccessPermissionWorkFlowAsync, req, res, server,)
+        processRequest<AccessPermissionRequest>(WorkflowFunctions.GetAccessPermissionWorkFlowAsync, req, res, undefined)
     })
 }
 
 async function processRequest<TRequest extends BaseRequest>(
-    workflowFunction: (request: TRequest, server: IOServer) => Promise<any>,
+    workflowFunction: (request: TRequest, params: any | undefined) => Promise<any>,
     req: any,
     res: any,
-    server: IOServer
+    params: any | undefined
 ) {
     let requestData = ""
     req.on("data", (chunk: any) => {
@@ -68,7 +71,7 @@ async function processRequest<TRequest extends BaseRequest>(
 
         if (requestObject) {
 
-            const response = await workflowFunction(requestObject, server).catch((err: Error) => {
+            const response = await workflowFunction(requestObject, params).catch((err: Error) => {
                 res.status(400).json(err.message);
             });
 

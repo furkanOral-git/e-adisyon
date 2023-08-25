@@ -1,13 +1,14 @@
-import { IDbEntity, IDomainEntity } from "../DomainLayer/Common/Common.Abstracts"
-import { Id, MenuId } from "../DomainLayer/Common/Common.ValueObjects"
+import { BaseValueObject, IDomainEntity } from "../DomainLayer/Common/Common.Abstracts"
 import { Bussiness } from "../DomainLayer/Domain.AcountManager/AcountManager.AggregateRoot"
 import { AcountManager } from "../DomainLayer/Domain.AcountManager/AcountManager.Entities"
-import { AcountManagerId, BussinessConfigFile, BussinessId } from "../DomainLayer/Domain.AcountManager/AcountManager.ValueObjects"
+import { AcountManagerId, BussinessId } from "../DomainLayer/Domain.AcountManager/AcountManager.ValueObjects"
 import { Menu } from "../DomainLayer/Domain.Product/Product.AggregateRoot"
+import { MenuId } from "../DomainLayer/Domain.Product/Product.ValueObjects"
+import { RoomConfig } from "./room/RoomConfig"
 import { JWTToken, JWTTokenId } from "./services/Authentication"
 import { User } from "./services/Security"
 
-export interface IRepository<TId extends Id, TEntity extends IDomainEntity<TId>> {
+export interface IRepository<TId extends BaseValueObject<string, TId>, TEntity extends IDomainEntity<TId>> {
 
     add(entity: TEntity): void
     remove(id: TId): void
@@ -16,7 +17,7 @@ export interface IRepository<TId extends Id, TEntity extends IDomainEntity<TId>>
     filter(predicate: (entity: TEntity) => boolean): TEntity[] | null
     some(predicate: (entity: TEntity) => boolean): boolean
 }
-abstract class InMemoryBaseRepository<TId extends Id, TEntity extends IDomainEntity<TId>> implements IRepository<TId, TEntity>{
+abstract class InMemoryBaseRepository<TId extends BaseValueObject<string, TId>, TEntity extends IDomainEntity<TId>> implements IRepository<TId, TEntity>{
 
     protected __enitities: TEntity[];
 
@@ -55,26 +56,26 @@ abstract class InMemoryBaseRepository<TId extends Id, TEntity extends IDomainEnt
         const result = this.__enitities.find(predicate)
         return result ?? null
     }
-    filter(predicate: (entity: TEntity) => boolean): TEntity[] | null {
+    filter(predicate: (entity: TEntity) => boolean): TEntity[] {
         const result = this.__enitities.filter(predicate);
-        return result.length > 0 ? result : null
+        return result
     }
     some(predicate: (entity: TEntity) => boolean): boolean {
         return this.__enitities.some(predicate);
     }
 }
-export class ConfigRepository extends InMemoryBaseRepository<BussinessId, BussinessConfigFile> {
+export class RoomConfigRepository extends InMemoryBaseRepository<BussinessId, RoomConfig> {
 
-    private static __instance: ConfigRepository
+    private static __instance: RoomConfigRepository
 
     private constructor() {
         super()
     }
 
-    public static GetRepo(): ConfigRepository {
+    public static GetRepo(): RoomConfigRepository {
 
         if (this.__instance) {
-            this.__instance = new ConfigRepository();
+            this.__instance = new RoomConfigRepository();
         }
         return this.__instance;
     }

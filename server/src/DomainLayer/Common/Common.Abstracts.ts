@@ -1,10 +1,10 @@
-import { Id } from "./Common.ValueObjects";
 
 
-export interface IDomainEntity<TId extends Id> {
+
+export interface IDomainEntity<TId extends IValueObject> {
 
     get id(): TId;
-    
+
 
 }
 
@@ -12,17 +12,34 @@ export interface IDbEntity {
 
 }
 
-export interface IEntityId extends IValueObject {
+export interface IEntityId extends IBaseValueObject {
 
 }
 
+export interface IBaseValueObject {
+
+}
 export interface IValueObject {
 
+
 }
 
-export interface IGenericValueObject<TValueObject extends IValueObject> {
+export abstract class BaseValueObject<TValue extends any, TValueObject extends BaseValueObject<TValue, TValueObject>> implements IBaseValueObject {
 
-    IsEqualTo(right: TValueObject): boolean
-    IsSameReference(right: TValueObject): boolean
-
+    protected __value: TValue
+    public get value() {
+        return this.__value;
+    }
+    constructor(value: TValue) {
+        this.__value = value;
+    }
+    IsEqualTo(right: TValueObject): boolean {
+        return this.__value == right.value
+    }
+    IsEqual(right: TValue) {
+        return this.__value == right;
+    }
+    IsSameReference(right: TValueObject): boolean {
+        return Object.is(this, right);
+    }
 }

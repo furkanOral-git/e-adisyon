@@ -22,3 +22,4 @@ export class AcountManager implements IDomainEntity<AcountManagerId> {
 }
 
 
+

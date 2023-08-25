@@ -1,7 +1,6 @@
 import { AggregateRoot } from "../Common/Common.AggregateRoot";
-import { MenuId } from "../Common/Common.ValueObjects";
 import { Product } from "./Product.Entities";
-import {  ProductId } from "./Product.ValueObjects";
+import { MenuId, ProductId } from "./Product.ValueObjects";
 
 export class Menu extends AggregateRoot<ProductId, Product>{
 

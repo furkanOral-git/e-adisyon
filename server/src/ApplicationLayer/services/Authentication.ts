@@ -1,8 +1,7 @@
-import { IDomainEntity } from "../../DomainLayer/Common/Common.Abstracts";
-import { Id } from "../../DomainLayer/Common/Common.ValueObjects";
-import { LoginRequest, RegisterRequest } from "../../PresentationLayer/Requests";
+import { BaseValueObject, IDomainEntity, IValueObject } from "../../DomainLayer/Common/Common.Abstracts";
+import { RegisterRequest } from "../../PresentationLayer/Requests";
 import { EmailHasBeenUsedAlready } from "../Errors";
-import { JWTRepository, UserRepository } from "../Repositories";
+import { JWTRepository} from "../Repositories";
 import { RondomIdGenarator } from "../Tools";
 import { SecurityManager, User } from "./Security";
 import { UserService } from "./Services";
@@ -20,7 +19,7 @@ export class AuthenticationService {
             const user = this.__userService.Register(req)
             const refreshToken = this.CreateRefreshToken(user, req.permission.results.subscribeType, req.permission.results.timeAmount)
             const accessToken = this.CreateAccessToken(user, refreshToken)
-            return new SucceedAuthenticationResponse(accessToken?.signature, refreshToken.signature)
+            return new SucceedAuthenticationResponse(accessToken?.signature)
 
         } catch (error: any) {
 
@@ -33,8 +32,7 @@ export class AuthenticationService {
 
 
     }
-
-    static VerifyToken(subject: string, token: JWTToken): boolean {
+    private static VerifyToken(subject: string, token: JWTToken): boolean {
 
 
         const payload = token.signature.split(".")[1];
@@ -122,7 +120,7 @@ export class AuthenticationService {
 
 
 }
-export class JWTTokenId extends Id {
+export class JWTTokenId extends BaseValueObject<string, JWTTokenId> implements IValueObject {
 
 }
 export class JWTToken implements IDomainEntity<JWTTokenId> {
@@ -217,40 +215,38 @@ export abstract class AuthenticationResponse {
     private __succeed: boolean
     private __message: string
     private __accessToken: string | undefined
-    private __refreshToken: string | undefined
+
 
     public get accessToken() {
         return this.__accessToken;
     }
-    public get refreshToken() {
-        return this.__refreshToken;
-    }
+
     public get succeed() {
         return this.__succeed;
     }
     public get message() {
         return this.__message;
     }
-    constructor(succeed: boolean, accessToken: string | undefined, refreshToken: string | undefined, message: string = "") {
+    constructor(succeed: boolean, accessToken: string | undefined, message: string = "") {
 
         this.__message = message;
         this.__succeed = succeed;
         this.__accessToken = accessToken;
-        this.__refreshToken = refreshToken;
+
     }
 }
 
 export class SucceedAuthenticationResponse extends AuthenticationResponse {
 
 
-    constructor(accessToken: string | undefined, refreshToken: string | undefined) {
-        super(true, accessToken, refreshToken)
+    constructor(accessToken: string | undefined) {
+        super(true, accessToken)
     }
 }
 export class FailedAuthenticationResponse extends AuthenticationResponse {
 
     constructor(message: string) {
 
-        super(false, undefined, undefined, message)
+        super(false, undefined, message)
     }
 }

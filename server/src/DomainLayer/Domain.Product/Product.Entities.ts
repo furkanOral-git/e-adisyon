@@ -8,19 +8,19 @@ export interface ProductAmountMap {
     amount: number
 }
 export interface NewOrderedProductMap {
-    
+
     orderedName: string
     productType: TypeOfProduct
-    amount : number
+    amount: number
 }
 export class Product implements IDomainEntity<ProductId> {
 
-    public __id: ProductId
-    public __name: string;
-    public __unitPrice: Money;
-    public __category: ProductCategory
-    public __status: ProductStatus
-    public __typeOfProduct: TypeOfProduct
+    private __id: ProductId
+    private __name: string;
+    private __unitPrice: Money;
+    private __category: ProductCategory
+    private __status: ProductStatus
+    private __typeOfProduct: TypeOfProduct
 
     constructor(id: ProductId, name: string, unitPrice: Money, category: ProductCategory, canBe: boolean, status = ProductStatus.ReadyForOrder, type: TypeOfProduct) {
 
@@ -30,6 +30,9 @@ export class Product implements IDomainEntity<ProductId> {
         this.__category = category;
         this.__status = status;
         this.__typeOfProduct = type;
+    }
+    get id(): ProductId {
+        return this.__id;
     }
 
 
