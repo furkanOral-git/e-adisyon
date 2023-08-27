@@ -1,7 +1,7 @@
 import { BaseValueObject, IDomainEntity, IValueObject } from "../../DomainLayer/Common/Common.Abstracts";
 import { RegisterRequest } from "../../PresentationLayer/Requests";
 import { EmailHasBeenUsedAlready } from "../Errors";
-import { JWTRepository} from "../Repositories";
+import { JWTRepository } from "../Repositories";
 import { RondomIdGenarator } from "../Tools";
 import { SecurityManager, User } from "./Security";
 import { UserService } from "./Services";
@@ -15,8 +15,9 @@ export class AuthenticationService {
     public static Sign(req: RegisterRequest): AuthenticationResponse {
 
         try {
-
+            console.log("Çalıştı")
             const user = this.__userService.Register(req)
+            console.log("Çalıştı2")
             const refreshToken = this.CreateRefreshToken(user, req.permission.results.subscribeType, req.permission.results.timeAmount)
             const accessToken = this.CreateAccessToken(user, refreshToken)
             return new SucceedAuthenticationResponse(accessToken?.signature)
@@ -32,7 +33,7 @@ export class AuthenticationService {
 
 
     }
-    private static VerifyToken(subject: string, token: JWTToken): boolean {
+    private static VerifyTokenAsJWT(subject: string, token: JWTToken): boolean {
 
 
         const payload = token.signature.split(".")[1];
@@ -52,6 +53,24 @@ export class AuthenticationService {
         }
 
     }
+    static VerifyTokenAsString(subject: string, token: string) {
+
+        const payload = token.split(".")[1];
+        const decodedPayload = SecurityManager.base64UrlDecode(payload)
+        const jsonPayload = JSON.parse(decodedPayload) as { sub: string, name: string, exp: number };
+
+        if (!this.IsExpired(jsonPayload)) {
+            if (subject == jsonPayload.sub) {
+                return true;
+            }
+            else {
+                throw new Error("Token ve subject uyuşmuyor")
+            }
+        }
+        else {
+            return false;
+        }
+    }
     private static IsExpired(payload: { "sub": string, "name": string, "exp": number }): boolean {
         const currentTime = Math.floor(Date.now() / 1000);
         return currentTime >= payload.exp
@@ -70,7 +89,7 @@ export class AuthenticationService {
     }
     public static CreateAccessToken(user: User, refreshToken: JWTToken): JWTToken {
 
-        this.VerifyToken(user.bussinessId.value, refreshToken)
+        this.VerifyTokenAsJWT(user.bussinessId.value, refreshToken)
 
         const payload = {
             sub: user.id.value,
@@ -156,60 +175,7 @@ export enum PackageTypes {
     Monthly = "MONTHLY",
     Yearly = "YEARLY"
 }
-export class ReferenceKey {
 
-    private __expireyDate: Date
-    private __customerId: string
-    private __packageType: PackageTypes
-
-    public get packageType() {
-        return this.__packageType
-    }
-    public get customerId() {
-        return this.__customerId;
-    }
-    public get ExpireyDate() {
-        return this.__expireyDate;
-    }
-    private constructor(customerId: string, packageType: PackageTypes, expireyDate: Date) {
-
-        this.__packageType = packageType;
-        this.__customerId = customerId;
-        this.__expireyDate = expireyDate;
-    }
-
-    public static Create(customerId: string, type: PackageTypes, amount: number): ReferenceKey {
-        switch (type) {
-            case PackageTypes.Trial:
-                return this.create(customerId, type, amount)
-            case PackageTypes.Monthly:
-                return this.createForMonth(customerId, type, amount)
-            case PackageTypes.Yearly:
-                return this.createForYear(customerId, type, amount);
-            default:
-                throw new Error("Bir Hata Oluştu")
-        }
-    }
-    public isExpired(): boolean {
-        const currentDate = new Date();
-        return this.ExpireyDate < currentDate
-    }
-    private static create(customerId: string, packageType: PackageTypes, day: number): ReferenceKey {
-
-        const today = new Date()
-        const expireyDate = new Date()
-        expireyDate.setDate(today.getDate() + day)
-        return new ReferenceKey(customerId, packageType, expireyDate)
-    }
-    private static createForMonth(customerId: string, packageType: PackageTypes, month: number): ReferenceKey {
-
-        return this.create(customerId, packageType, 30 * month)
-    }
-    private static createForYear(customerId: string, packageType: PackageTypes, year: number): ReferenceKey {
-
-        return this.create(customerId, packageType, 365 * year)
-    }
-}
 export abstract class AuthenticationResponse {
 
     private __succeed: boolean
@@ -241,6 +207,11 @@ export class SucceedAuthenticationResponse extends AuthenticationResponse {
 
     constructor(accessToken: string | undefined) {
         super(true, accessToken)
+    }
+}
+export class SucceedAuthenticationDataResponse extends SucceedAuthenticationResponse {
+    constructor(accessToken: string,) {
+        super(accessToken)
     }
 }
 export class FailedAuthenticationResponse extends AuthenticationResponse {

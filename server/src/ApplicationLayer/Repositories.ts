@@ -4,6 +4,7 @@ import { AcountManager } from "../DomainLayer/Domain.AcountManager/AcountManager
 import { AcountManagerId, BussinessId } from "../DomainLayer/Domain.AcountManager/AcountManager.ValueObjects"
 import { Menu } from "../DomainLayer/Domain.Product/Product.AggregateRoot"
 import { MenuId } from "../DomainLayer/Domain.Product/Product.ValueObjects"
+import { BussinessConfig } from "./room/BussinessConfig"
 import { RoomConfig } from "./room/RoomConfig"
 import { JWTToken, JWTTokenId } from "./services/Authentication"
 import { User } from "./services/Security"
@@ -64,26 +65,19 @@ abstract class InMemoryBaseRepository<TId extends BaseValueObject<string, TId>, 
         return this.__enitities.some(predicate);
     }
 }
-export class RoomConfigRepository extends InMemoryBaseRepository<BussinessId, RoomConfig> {
-
-    private static __instance: RoomConfigRepository
-
+export class BussinessConfigRepository extends InMemoryBaseRepository<BussinessId, BussinessConfig>{
+    
+    private static __instance: BussinessConfigRepository;
     private constructor() {
         super()
     }
+    static GetRepo(): BussinessConfigRepository {
 
-    public static GetRepo(): RoomConfigRepository {
-
-        if (this.__instance) {
-            this.__instance = new RoomConfigRepository();
+        if (!this.__instance) {
+            this.__instance = new BussinessConfigRepository();
         }
         return this.__instance;
     }
-
-
-
-
-
 }
 export class BussinessRepository extends InMemoryBaseRepository<BussinessId, Bussiness> {
 
@@ -163,7 +157,5 @@ export class UserRepository extends InMemoryBaseRepository<AcountManagerId, User
         }
         return this.__instance;
     }
-
-
 
 }

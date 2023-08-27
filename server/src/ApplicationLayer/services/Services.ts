@@ -1,16 +1,19 @@
 import { BaseValueObject, IDomainEntity } from "../../DomainLayer/Common/Common.Abstracts"
 import { IONameSpace } from "../../DomainLayer/Common/Common.ValueObjects"
 import { Bussiness } from "../../DomainLayer/Domain.AcountManager/AcountManager.AggregateRoot"
+import { BussinessId } from "../../DomainLayer/Domain.AcountManager/AcountManager.ValueObjects"
 import { TableLayout, TableLayoutOption } from "../../DomainLayer/Domain.Order/Order.AggregateRoot"
 import { Menu } from "../../DomainLayer/Domain.Product/Product.AggregateRoot"
 import { MenuId } from "../../DomainLayer/Domain.Product/Product.ValueObjects"
 import { IOServer, Room } from "../../DomainLayer/Domain.Room/Room.AggregateRoot"
 import { ParticipantClientModel, Participant } from "../../DomainLayer/Domain.Room/Room.Entities"
 import { ParticipantId, RoomId } from "../../DomainLayer/Domain.Room/Room.ValueObjects"
-import { LoginRequest, RegisterRequest} from "../../PresentationLayer/Requests"
+import { LoginRequest, RegisterRequest } from "../../PresentationLayer/Requests"
 import { EmailHasBeenUsedAlready, EmailHasNotFound, WrongPasswordEntered } from "../Errors"
-import { UserRepository, MenuRepository, RoomConfigRepository } from "../Repositories"
+import { UserRepository, MenuRepository, BussinessConfigRepository, BussinessRepository } from "../Repositories"
 import { RondomIdGenarator } from "../Tools"
+import { BussinessConfig } from "../room/BussinessConfig"
+import { RoomConfig } from "../room/RoomConfig"
 import { RoomContext } from "../room/RoomContext"
 import { SecurityManager, User } from "./Security"
 
@@ -57,14 +60,15 @@ export class UserService {
         return this.__repo.filter(predicate) ?? null;
     }
     Register(req: RegisterRequest): User {
-
+        
         const IsExist = this.Some(user => user.email == req.email)
+        
         if (IsExist) {
-
+           
             throw new EmailHasBeenUsedAlready()
         }
         const hashedPassword = SecurityManager.hashPassword(req.password);
-
+        
         const user = new User(
             req.permission.managerId,
             req.permission.bussinessId,
@@ -103,29 +107,20 @@ export class UserService {
 
 
 
-
-
-
-
-
-
-
-
 export class AppContextManagementService {
 
     private static __instance: AppContextManagementService
-    private __contexts: { [bussinessId: string]: RoomContext }
+    private __contexts: { [bussinessId: string]: RoomContext[] }
     private __ioServer: IOServer
-    private __configRepo: RoomConfigRepository
     private __menuRepository: MenuRepository
-    
+    private __bussinessConfigRepo: BussinessConfigRepository
 
     private constructor(ioServer: IOServer) {
 
         this.__contexts = {}
         this.__ioServer = ioServer;
-        this.__configRepo = RoomConfigRepository.GetRepo();
         this.__menuRepository = MenuRepository.GetRepo();
+        this.__bussinessConfigRepo = BussinessConfigRepository.GetRepo();
     }
     public static GetService(ioServer: IOServer) {
 
@@ -134,72 +129,65 @@ export class AppContextManagementService {
         }
         return this.__instance;
     }
-    private AddContext(context: RoomContext) {
 
-        this.__contexts[context.bussinessId.value] = context
-
-    }
     private RemoveContext(context: RoomContext) {
         delete this.__contexts[context.bussinessId.value]
         context.Disconnect();
         context.Deconstruct();
     }
-    GetAppContext(bussiness: Bussiness): RoomContext {
+    private AddRoomContext(contex: RoomContext, id: BussinessId): void {
 
-        if (Object.keys(this.__contexts).includes(bussiness.id.value)) {
-            return this.__contexts[bussiness.id.value]
+        if (Object.keys(this.__contexts).includes(id.value)) {
+
+            const contexts = this.__contexts[id.value]
+            if (!contexts.includes(contex)) {
+                contexts.push(contex);
+            }
         }
-        return this.CreateAppContext(bussiness);
-
     }
-    private CreateAppContext(bussiness: Bussiness): RoomContext {
+    CreateRoomContextWithConfig(bussinessConfig: BussinessConfig, bussiness: Bussiness, roomId: RoomId): RoomContext {
 
-        let menu: Menu | null
-        let layout: TableLayout;
-        let room: Room | undefined
+        const roomConfig = bussinessConfig.GetRoomConfig(roomId);
+        let menu = this.__menuRepository.getBy(e => e.id.IsEqualTo(roomConfig.menuId))
+        const layout = new TableLayout(roomConfig.tableLayoutOption);
+        const room = new Room(roomId);
         let context: RoomContext
+        if (!!menu) {
 
-
-        const config = this.__configRepo.getBy(c => c.id.IsEqualTo(bussiness.id))
-        const nameSpace = new IONameSpace(bussiness.id.value);
-
-        if (!!config) {
-
-            menu = this.__menuRepository.getBy(p => p.id.IsEqualTo(config.menuId));
-            room = this.__ioServer.getBy(r => r.id.IsEqualTo(config.roomId))
-            layout = new TableLayout(config.tableLayoutOption)
-
-            if (!room) {
-                room = new Room(config.roomId, nameSpace);
-            }
-            if (!menu) {
-                menu = new Menu(config.menuId);
-            }
-
-
+            context = new RoomContext(menu, layout, room, bussiness);
         }
         else {
-
-            const option: TableLayoutOption = {
-                amount: 0,
-                indexTableNumber: 0
-            }
-            layout = new TableLayout(option)
-            const roomIdValue = RondomIdGenarator.CreateId(30)
-            menu = new Menu(new MenuId(RondomIdGenarator.CreateId(5)))
-            room = new Room(new RoomId(roomIdValue), nameSpace)
-
+            menu = new Menu(roomConfig.menuId);
+            this.__menuRepository.add(menu);
+            context = new RoomContext(menu, layout, room, bussiness);
         }
+        this.AddRoomContext(context, context.bussinessId);
+        return context;
+    }
 
-        const model = new ParticipantClientModel(bussiness.getFirst().name, nameSpace);
-        const builderParticipant = new Participant(new ParticipantId(RondomIdGenarator.CreateId(15)), model);
-        room.AddParticipant(builderParticipant);
-        context = new RoomContext(menu, layout, room, bussiness, this.__ioServer)
-        this.AddContext(context)
-        return context
+    CreateRoomContext(bussiness: Bussiness): RoomContext {
+
+        const bussinessConfig = new BussinessConfig(bussiness.id)
+        const options: TableLayoutOption = {
+            amount: 0,
+            indexTableNumber: 0
+        }
+        const menuId = new MenuId(RondomIdGenarator.CreateId(7));
+        const roomId = new RoomId(RondomIdGenarator.CreateId(15));
+        bussinessConfig.AddNewRoomConfig(roomId, options, menuId);
+        this.__bussinessConfigRepo.add(bussinessConfig);
+        
+        const layout = new TableLayout(options)
+        const menu = new Menu(menuId);
+        const room = new Room(roomId)
+        this.__menuRepository.add(menu);
+        const context = new RoomContext(menu, layout, room, bussiness);
+        this.AddRoomContext(context, context.bussinessId)
+        return context;
     }
 
 }
+
 
 
 

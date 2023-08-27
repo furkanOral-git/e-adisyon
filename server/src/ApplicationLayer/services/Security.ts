@@ -156,7 +156,7 @@ export class AccessPermissionRequestManager {
                     delete this.__requests[id]
                     clearInterval(intervalId)
 
-                    if (this.__responses[id].result) {
+                    if (this.__responses[id].success) {
                         resolve(this.__responses[id])
                     }
                     else {

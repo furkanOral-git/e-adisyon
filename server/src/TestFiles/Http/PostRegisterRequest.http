@@ -1,20 +1,28 @@
-POST http://localhost:3001/register/id=HAbRXWs5mpGiyz9
+POST http://localhost:3001/register/id=xwIGdqA
 Content-Type: application/json
 
-{   
-    "email" : "furkanoral@hotmail.com",
-    "name":"Furkan",
-    "surname":"Oral",
-    "password":"456332asdad",
-    "permission":{
-  "__permissionStatus": true,
+{
+  "__email":"furkanoral@hotmail.com",
+  "__name":"Furkan",
+  "__surname":"Oral",
+  "__password":"123",
+  "__permission": 
+  {
+    "__results": {
+      "__request": {
+        "__customerName": "Furkan",
+        "__customerSurname": "Oral",
+        "__bussinessName": "Yazılım Şirketi",
+        "__requestId": "cmpR971",
+        "__state": 1
+    },
+    "__success": true
+  },
   "__acountManagerId": {
-    "__value": "HAbRXWs5mpGiyz9"
+    "__value": "HHMaH1m3GPalrhR"
   },
   "__bussinessId": {
-    "__value": "95HAmRS87kI6rDy"
-  },
-  "__packageType": "TRIAL",
-  "__timeAmount": 15
-}
+    "__value": "jo8ZfsKbEfF98a1"
+  }
+  }
 }

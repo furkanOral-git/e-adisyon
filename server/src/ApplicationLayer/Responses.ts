@@ -19,14 +19,14 @@ export class AppResponse {
 
 export abstract class PermissionResult {
 
-    private __result: boolean
+    private __success: boolean
     private __request: WaitedPermissionRequest
 
     public get id() {
         return this.__request.requestId;
     }
-    public get result() {
-        return this.__result;
+    public get success() {
+        return this.__success;
     }
     public get subscribeType() {
         return this.__request.subscribeType
@@ -44,9 +44,9 @@ export abstract class PermissionResult {
         return this.__request.email
     }
 
-    constructor(request: WaitedPermissionRequest, result: boolean) {
+    constructor(request: WaitedPermissionRequest, success: boolean) {
         this.__request = request;
-        this.__result = result;
+        this.__success = success;
     }
 
 }

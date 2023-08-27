@@ -7,14 +7,21 @@ import { RondomIdGenarator } from "./Tools";
 import { AcountManager } from "../DomainLayer/Domain.AcountManager/AcountManager.Entities";
 import { AuthenticationResponse, AuthenticationService, FailedAuthenticationResponse, SucceedAuthenticationResponse } from "./services/Authentication";
 import { AppContextManagementService, UserService } from "./services/Services";
-import { BussinessRepository, JWTRepository } from "./Repositories";
+import { BussinessConfigRepository, BussinessRepository, JWTRepository } from "./Repositories";
 import { IOClientInterface } from "../DomainLayer/Domain.Room/Room.Abstracts";
 import { AccessPermissionRequestManager } from "./services/Security";
+import { RoomContext } from "./room/RoomContext";
+import { Participant, ParticipantClientModel } from "../DomainLayer/Domain.Room/Room.Entities";
+import { ParticipantId } from "../DomainLayer/Domain.Room/Room.ValueObjects";
+import { IONameSpace } from "../DomainLayer/Common/Common.ValueObjects";
+import { NodeMailer } from "../InfrastructureLayer/NodeMailer";
+import { VertificationService } from "../InfrastructureLayer/VertificationService";
 
 
 
 
 export class WorkflowFunctions {
+
 
     static async GetAccessPermissionWorkFlowAsync(request: AccessPermissionRequest): Promise<PermissionResponse> {
 
@@ -45,9 +52,14 @@ export class WorkflowFunctions {
 
         return new Promise<AuthenticationResponse>((resolve, reject) => {
             try {
-
+                const vertificationCode = RondomIdGenarator.CreateId(4).toUpperCase();
+                NodeMailer.SendVertificationMail(request.email, "Gmail", vertificationCode)
+                const IsVerified = await VertificationService.WaitForVertification(vertificationCode, requestId, request.email)
+                if (!IsVerified) {
+                    reject("Geçersiz Email")
+                }
                 if (!AccessPermissionRequestManager.VerifyResponseAndClearIfExist(requestId)) {
-                    reject("Geçersiz İstek")
+                    reject("Kabul Edilmeyen İstek")
                 }
                 const response = AuthenticationService.Sign(request)
                 if (response instanceof FailedAuthenticationResponse) {
@@ -87,22 +99,47 @@ export class WorkflowFunctions {
         })
 
     }
-    //SocketRequestWorkFlow for AcountManagers
-    static async CreateAppContextRequestWorkFlow(request: GetSocketConnectionRequest, ioServer: IOServer): Promise<IOClientInterface> {
+    //first time createdRoomContext
+    static async CreateRoomContextRequestWorkFlow(request: GetSocketConnectionRequest, ioServer: IOServer): Promise<IOClientInterface> {
 
         return new Promise<IOClientInterface>((resolve, reject) => {
             //Auth kontrolleri...
             try {
-                const bussiness = BussinessRepository.GetRepo().getBy(b => b.id.IsEqualTo(request.bussinessId))
+
+                const contextService = AppContextManagementService.GetService(ioServer);
+                const configRepo = BussinessConfigRepository.GetRepo();
+                let config = configRepo.getBy(c => c.id.IsEqualTo(request.bussinessId))
+                let context: RoomContext
+                const bussiness = BussinessRepository.GetRepo().getBy(e => e.id.IsEqualTo(request.bussinessId))
+
                 if (!!bussiness) {
 
-                    const appContextManager = AppContextManagementService.GetService(ioServer)
-                    const context = appContextManager.GetAppContext(bussiness)
-                    resolve(context.room.getFirst());
+                    if (!!config) {
+                        //daha önce oda açılmış ve gün başlatma yapılacak
+                        context = contextService.CreateRoomContextWithConfig(config, bussiness, request.roomId);
+                    }
+                    else {
+                        //ilk defa
+                        context = contextService.CreateRoomContext(bussiness);
+
+                    }
+                    //client oluşturulacak ve context nesnesinin içerisindeki room nesnesine eklencek ardından da resolve edilecek
+                    const acountManager = bussiness.getBy(e => e.id.IsEqualTo(request.acountManagerId))
+                    if (!!acountManager) {
+
+                        const nameSpace = new IONameSpace(bussiness.id.value);
+                        const participantModel = new ParticipantClientModel(acountManager.name, nameSpace)
+                        const participant = new Participant(new ParticipantId(RondomIdGenarator.CreateId(10)), participantModel)
+                        context.room.AddParticipant(participant);
+                        resolve(participant)
+                    }
+                    else {
+                        reject("Kullanıcı bulunamadı")
+                    }
                 }
-                else {
-                    reject("İşletme bulunamadı")
-                }
+                reject("İşletme Bulunamadı")
+
+
 
             } catch (error) {
                 reject(error)
@@ -111,11 +148,11 @@ export class WorkflowFunctions {
         })
 
     }
-    static async CloseAppContextRequestWorkFlow() {
+    static async CloseRoomContextRequestWorkFlow() {
 
     }
     //Socket connection for emploies
-    static async JoinToAppContextRequestWorkFlow(request: EmploeeSocketConnectionRequest, roomId: string): Promise<void> {
+    static async JoinToRoomContextRequestWorkFlow(request: EmploeeSocketConnectionRequest, roomId: string): Promise<void> {
         //emploeeSocketConnection isteğinde ad soyad nerede çalıştığı bilgisi alınacak varsa participantId ile gelecek yoksa burada oluşturulacak
         return new Promise<void>((resolve, reject) => {
             //kontroller yapılacak

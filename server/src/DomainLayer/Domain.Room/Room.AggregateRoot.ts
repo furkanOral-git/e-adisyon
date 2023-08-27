@@ -3,21 +3,20 @@ import { AggregateRoot } from "../Common/Common.AggregateRoot"
 import { ParticipantId, RoomId } from "./Room.ValueObjects"
 import { Participant } from "./Room.Entities"
 import { IDomainEntity } from "../Common/Common.Abstracts"
-import { IONameSpace } from "../Common/Common.ValueObjects"
 
 export class Room extends AggregateRoot<ParticipantId, Participant> implements IDomainEntity<RoomId>{
 
     private __id: RoomId
-    private __nameSpace: IONameSpace
+    
 
     get id(): RoomId {
         return this.__id;
     }
-    constructor(roomId: RoomId, nameSpace: IONameSpace) {
+    constructor(roomId: RoomId) {
 
         super()
         this.__id = roomId
-        this.__nameSpace = nameSpace;
+        
 
     }
     AddParticipant(participant: Participant) {
@@ -25,7 +24,8 @@ export class Room extends AggregateRoot<ParticipantId, Participant> implements I
     }
 
 }
-export class IOServer extends AggregateRoot<RoomId, Room>{
+
+export class IOServer {
 
     private __io: Server
     private static _instance: IOServer
@@ -35,7 +35,6 @@ export class IOServer extends AggregateRoot<RoomId, Room>{
     }
     private constructor(io: Server) {
 
-        super()
         this.__io = io;
 
     }

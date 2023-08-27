@@ -1,0 +1,45 @@
+.container {
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.form {
+    width: 60%;
+    height: 80vh;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: flex-start;
+    border: 1px solid #ddd;
+    border-radius: 15px;
+}
+
+.form>.input {
+
+    width: 250px;
+    height: 40px;
+    border-radius: 30px;
+    margin-top: 50px;
+    margin-right: 40px;
+    border: 1px solid #ddd;
+    text-indent: 10px;
+
+}
+
+.btn {
+    width: 200px;
+    height: 50px;
+    margin-top: auto;
+    margin-bottom: auto;
+    border-radius: 15px;
+    margin-right: 83px;
+    border: 1px solid #ddd;
+}
+
+.form>.input:focus {
+    border: 1px solid #dddd;
+    outline: none;
+}
